@@ -110,7 +110,7 @@ ENV/
 env.bak/
 venv.bak/
 nlp-venv/
-flask-session/
+flask_session/
 
 # Spyder project settings
 .spyderproject
