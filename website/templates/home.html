@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
+    crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300,800' rel='stylesheet' type='text/css'>
+
+  <title>{% block title %}NLP-KNG{% endblock %}</title>
+  <link rel="stylesheet" type=text/css href="/static/styles.css">
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+    integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous">
+    </script>
+
+  <!-- <script src="/static/image_effect.js"></script> -->
+  <!-- <script src="image_effect.js" type="text/javascript"></script> -->
+  <!-- <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css"> -->
+  <!-- <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script> -->
+  <!-- <script src="//code.jquery.com/jquery-1.11.1.min.js"></script> -->
+  <!------ Include the above in your HEAD tag ---------->
+</head>
+
+<body>
+  <br>
+  <form action="{{url_for('actions.scrape')}}" class="form-container" method="POST">
+    <div class="form-group">
+      
+      <div class="container" align="center">
+        <div class="container" align="left">
+        <h3><label for="cleantext" align="left">Enter URL</label></h3>
+        </div>
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="inputGroup-sizing-sm">URL</span>
+          </div>
+          <input type="text" class="form-control" name="weburl" id='weburl' aria-label="weburl"
+            aria-describedby="inputGroup-sizing-sm" value="{{weburl}}" placeholder="Enter url"></input>
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="submit" value="submit">Submit</button>
+          </div>
+        </div>
+      </div>
+      <br>
+    </div>
+  </form>
+
+  <form action="{{url_for('actions.extract')}}" class="form-container" method="POST">
+    <div class="form-group" align="center">
+      {% if cleantext %}
+      <div class="container" align="left">
+        <h2><label for="cleantext">Web Scraped and Cleaned Text</label></h2>
+        <textarea class="form-control" name="cleantext" id='cleantext' aria-label="cleantext"
+          aria-describedby="inputGroup-sizing-sm" placeholder="NA" rows="15">{{ cleantext }}</textarea>
+        <br>
+        <button align='Right' class="btn btn-primary" type="submit" value="submit">Look's Good</button>
+      </div>
+      <input type="hidden" id="weburl" name="weburl" value="{{ weburl }}">
+      <br>
+      <!-- <div class="input-group-append"> -->
+      <!-- <div class="form-group"> -->
+      <!-- <br> -->
+      <!-- <button align='Right' class="btn btn-primary" type="submit" value="submit">Look's Good</button> -->
+      <!-- </div> -->
+      {% endif %}
+    </div>
+    {% if display_svo %}
+    {% if triplets_found %}
+    <div class="container" align="center">
+      <input type="hidden" id="svo_df" name="svo_df" value="{{ svo_df }}">
+      <input type="hidden" id="text_doc" name="text_doc" value="{{ text_doc }}">
+      <input type="hidden" id="nlp" name="nlp" value="{{ nlp }}">
+      <input type="hidden" id="cleantext" name="cleantext" value="{{ cleantext }}">
+      <input type="hidden" id="triplets_found" name="triplets_found" value="{{ triplets_found }}">
+      <input type="hidden" id="headings" name="headings" value="{{ headings }}">
+      <input type="hidden" id="data" name="data" value="{{ data }}">
+      <!-- <input type="hidden" id="svo_table" name="svo_table" value="{{ svo_table }}"> -->
+      <div class="row">
+        <div class="grid-child purple" align="left">
+          <h2 id="sub-verb-obj">
+            <div>Subject, Verb, Object Triplets.<a class="anchorjs-link " style="padding-left: 0.375em;"></a></div>
+          </h2>
+          <!-- <p class="text-left">Subject, Verb, Object Triplets.</p> -->
+          <br>
+          <div class="table-wrapper-scroll-y my-custom-scrollbar">
+  
+            <table class="table table-bordered table-striped mb-0">
+              <thead>
+                <tr class="table__header">
+                  {% for header in headings %}
+                  <th>{{ header }}</th>
+                  {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in data %}
+                <tr class="table__row">
+                  {% for cell in row %}
+                  <td class="table__cell">
+                    {{ cell }}
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+  
+          </div>
+  
+  
+          <!-- <table class="table table-bordered" name="svo_tab" style="width: 15%">
+              <tr class="table__header">
+                {% for header in headings %}
+                <th>{{ header }}</th>
+                {% endfor %}
+              </tr>
+              {% for row in data %}
+              <tr class="table__row">
+                {% for cell in row %}
+                <td class="table__cell">
+                  {{ cell }}
+                </td>
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </table> -->
+  
+          <!-- <table>
+              <h1>
+                   {% for table in svo_table %}
+                  <h2>{{titles[loop.index]}}</h2>                            
+                    {{ table|safe }}
+                    {% endfor %}     
+              </h1> 
+          </table> -->
+  
+        </div>
+        <div class="grid-child green">
+          <div class="container" align="left" style="width: 700px; height: 700px;">
+            <h2 id="sub-verb-obj" align="center">
+              <div>Knowledge Graph.<a class="anchorjs-link " style="padding-left: 0.375em;"></a></div>
+            </h2>
+  
+            <img src="data:image/png;base64, {{ image_base64 }}" name="kngimg" width="100%" height="100%" />
+  
+  
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    {% else %}
+    <div class="container" align="center">
+      <input type="hidden" id="svo_df" name="svo_df" value="{{ svo_df }}">
+      <input type="hidden" id="text_doc" name="text_doc" value="{{ text_doc }}">
+      <input type="hidden" id="nlp" name="nlp" value="{{ nlp }}">
+      <input type="hidden" id="cleantext" name="cleantext" value="{{ cleantext }}">
+      <input type="hidden" id="triplets_found" name="triplets_found" value="{{ triplets_found }}">
+      <input type="hidden" id="headings" name="headings" value="{{ headings }}">
+      <input type="hidden" id="data" name="data" value="{{ data }}">
+      <!-- <input type="hidden" id="svo_table" name="svo_table" value="{{ svo_table }}"> -->
+      <div class="row">
+        <div class="grid-child purple" align="left">
+          <h2 id="sub-verb-obj">
+            <div>Subject, Verb, Object Triplets.<a class="anchorjs-link " style="padding-left: 0.375em;"></a></div>
+          </h2>
+          <!-- <p class="text-left">Subject, Verb, Object Triplets.</p> -->
+          <br>
+          <table style="width: 100%; padding-top: 15px" cellspacing="0" cellpadding="0" aria-rowcount="10">
+            <tbody>
+              <tr>
+                <td>
+                  <div>
+                    <table cellspacing="0" cellpadding="3" rules="cols" border="1"
+                      style="border-color: #71A8D2; border-width: 1px; border-style: Solid; width: 100%; border-collapse: collapse;">
+                      <tbody>
+                        <tr class="common" align="center" style="height: 50px;">
+                          <td colspan="4">No records.</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" valign="top" style="height: 100%; padding-bottom: 15px;">&nbsp;
+                  &nbsp;
+                  &nbsp;
+  
+                </td>
+              </tr>
+            </tbody>
+          </table>
+  
+        </div>
+        <div class="grid-child green">
+          <div class="container" align="left" style="width: 600px; height: 400px;">
+            <h2 id="sub-verb-obj" align="center">
+              <div>Knowledge Graph.<a class="anchorjs-link " style="padding-left: 0.375em;"></a></div>
+            </h2>
+            <!-- <img src="/static/images/no-image-available.jpeg" name="kngimg" width="100%" height="100%" /> -->
+            <img src="data:image/png;base64, {{ image_base64 }}" name="kngimg" width="100%" height="100%" />
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    {% endif %}
+    {% endif %}
+  </form>
+
+  <br>
+  <form action="{{url_for('actions.queryQuestion')}}" id="todo-form" class="form-container" method="POST">
+    <div class="form-group">
+      <div class="container" align="center">
+        {% if triplets_found %}
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Question</span>
+          </div>
+          <input type="text" class="form-control" name="question" id='question' aria-label="question"
+            aria-describedby="inputGroup-sizing-sm" value="{{ question }}"
+            placeholder="e.g: What X is caused by?"></input>
+          <div class="input-group-append" id="query-div">
+            <!-- <button class="btn btn-outline-secondary" type="submit" id="query" value="submit">Query</button> -->
+            <button class="btn btn-outline-secondary" id="query" type="submit">Query</button>
+          </div>
+          
+          <input type="hidden" id="weburl" name="weburl" value="{{ weburl }}">
+          <input type="hidden" id="svo_df" name="svo_df" value="{{ svo_df }}">
+          <!-- <input type="hidden" id="text_doc" name="text_doc" value="{{ text_doc }}">
+            <input type="hidden" id="nlp" name="nlp" value="{{ nlp }}"> -->
+          <input type="hidden" id="cleantext" name="cleantext" value="{{ cleantext }}">
+          <input type="hidden" id="triplets_found" name="triplets_found" value="{{ triplets_found }}">
+          <input type="hidden" id="headings" name="headings" value="{{ headings }}">
+          <input type="hidden" id="data" name="data" value="{{ data }}">
+          <input type="hidden" id="question" name="question" value="{{ question }}">
+          <!-- <input type="hidden" id="svo_table" name="svo_table" value="{{ svo_table }}"> -->
+        </div>
+  
+        {% if short_answers_found %}
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Short Answer</span>
+          </div>
+          <textarea class="form-control" aria-label="With textarea" rows="{{short_answer_length}}"
+            readonly>{{ short_answers }}</textarea>
+        </div>
+        {% endif %}
+        {% if detailed_answers_found %}
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Detailed Answer</span>
+          </div>
+          <textarea class="form-control" aria-label="With textarea" rows="{{detailed_answer_length}}"
+            readonly>{{ detailed_answers }}</textarea>
+        </div>
+        {% endif %}
+        {% if no_answer_found %}
+        <div class="input-group input-group-sm mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Answer</span>
+          </div>
+          <textarea class="form-control" aria-label="With textarea" rows="1" readonly>{{ qanswer }}</textarea>
+        </div>
+        {% endif %}
+        <script>
+              $('html, body').stop().animate({scrollTop: $("#query-div").offset().top}, 1);
+        </script>
+        {% endif %}
+      </div>
+      <br>
+    </div>
+  </form>
+
+
+  <div class="container">{% block content %} {% endblock %}</div>
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
