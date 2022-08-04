@@ -26,10 +26,13 @@ def svo(text, nlp):
     '''Converting text into Document'''
     # print(text)
     text = text.lower()
+    print('Entered svo')
     text_doc = nlp(text)
+    print('Entered svo')
     text_doc = text_doc._.coref_resolved
+    print('Entered svo')
     text_doc = nlp(text_doc)
-    
+    print('Entered svo')
     '''For displaying in webpage'''
     # displacy.render(text_doc,style="ent")
 

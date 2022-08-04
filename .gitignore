@@ -112,6 +112,7 @@ venv.bak/
 nlp-venv/
 flask_session/
 .DS_Store
+neuralcoref/
 
 # Spyder project settings
 .spyderproject

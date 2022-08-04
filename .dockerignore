@@ -1,0 +1,4 @@
+nlp-venv/
+.gitignore
+flask_session/
+neuralcoref/
