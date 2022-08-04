@@ -36,7 +36,7 @@ def scrape():
         else:
             text = scrapper.scrape_text(web_url)
             text_df,text = cleaner.clean_data(text)
-            print(f'length of cleaned text scrape : {len(text)}')
+            # print(f'length of cleaned text scrape : {len(text)}')
             if len(text) > 1:
                 print(f'length of text scrapped:{len(text)}')
         return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
@@ -49,19 +49,19 @@ def extract():
         return render_template('home.html')
     if request.method == 'POST':
         web_url = request.form.get('weburl')
-        print(f'web_url:{web_url}')
+        nlp = spacy.load('en_core_web_sm')
+        neuralcoref.add_to_pipe(nlp)
+        # print(f'web_url:{web_url}')
         # text = request.form.get('cleantextarea')
         text = request.form.get('cleantext')
         print(f'length of clean text: {len(text)}')
-        print(text)
+        # print(text)
         '''defining the pipeline'''
         # nlp = spacy.load('en_core_web_sm',n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
-        nlp = spacy.load('en_core_web_sm')
-        neuralcoref.add_to_pipe(nlp)
         svo_df, text_doc = svo_extractor.svo(text,nlp)
-        print(f'type of text_doc ---> {type(text_doc)}')
-        print(len(svo_df))
-        print(svo_df.head(7))
+        # print(f'type of text_doc ---> {type(text_doc)}')
+        # print(len(svo_df))
+        # print(svo_df.head(7))
         triplets_found = False
         headings = svo_df.columns
         data_tuple = []
@@ -181,7 +181,7 @@ def queryQuestion():
                 # print(answer)
             # short_answers = short_answers.replace('\n','',1)
         answer, question_lemma_, question_pos_ = query.detailed_answer_question(question,text_doc, nlp, svo_df)
-        answers.print_answers(question, answer, question_lemma_, question_pos_)
+        # answers.print_answers(question, answer, question_lemma_, question_pos_)
         detailed_answers_found = False
         detailed_answer_length = 0
         if len(answer) > 0:
