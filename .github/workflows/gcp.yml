@@ -11,6 +11,8 @@ jobs:
     env:
       IMAGE_NAME: nlp-kng
       PROJECT_ID: nlp-kng-flask
+      APP_ID: nlp-kng-flask
+      RUN_REGION: us-east1
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -37,4 +39,6 @@ jobs:
         docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:latest
         docker push gcr.io/$PROJECT_ID/$IMAGE_NAME:$GIT_TAG
 
+    # - name: Deploy
+      # run: gcloud run deploy $APP_ID --image gcr.io/$PROJECT_ID/$APP_ID:$GITHUB_SHA --platform managed --region $RUN_REGION --allow-unauthenticated
       
