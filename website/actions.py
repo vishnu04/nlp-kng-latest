@@ -31,15 +31,19 @@ def scrape():
         web_url = request.form.get("weburl")
         print(web_url)
         if len(web_url) <1 :
-            flash('URL is too short!', category='error')
+            flash('URL is too short! Please enter correct URL. e.g: https://textacy.readthedocs.io/', category='error')
             return render_template('home.html')
         else:
-            text = scrapper.scrape_text(web_url)
-            text_df,text = cleaner.clean_data(text)
-            # print(f'length of cleaned text scrape : {len(text)}')
-            if len(text) > 1:
-                print(f'length of text scrapped:{len(text)}')
-        return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
+            try:
+                text = scrapper.scrape_text(web_url)
+                text_df,text = cleaner.clean_data(text)
+                # print(f'length of cleaned text scrape : {len(text)}')
+                if len(text) > 1:
+                    print(f'length of text scraped:{len(text)}')
+                    return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
+            except:
+                flash('URL entered cannot be scraped !. Please enter correct URL. e.g: https://textacy.readthedocs.io/', category='error')
+                return render_template('home.html', weburl = web_url)
 
 
 @actions.route('/extract', methods=['POST'])
