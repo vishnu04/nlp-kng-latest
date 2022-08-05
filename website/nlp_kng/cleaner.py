@@ -1,5 +1,8 @@
 import pandas as pd
 import re
+import nltk
+nltk.download('punkt')
+
 from nltk import tokenize
 from . import config
 
