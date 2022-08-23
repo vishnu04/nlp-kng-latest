@@ -1,21 +1,40 @@
+from venv import create
 from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file, session
-from .nlp_kng import scrapper, cleaner, svo_extractor, kg_generator, query
-# from .nlp_kng import * 
+from .nlp_kng import scrapper, cleaner, svo_extractor, kg_generator, query, config, create_temp_dir, cleantmp
 import spacy
-import neuralcoref
+# import neuralcoref
 from io import BytesIO
 import networkx as nx
 import matplotlib.pyplot as plt
 import base64
-import json 
-from . import answers
 import pandas as pd 
 from PIL import Image
-import io 
 import os 
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+from spacy.tokens import Doc
 
+def save_nlp_to_disk(text_doc):
+    try:
+        tmpdir = create_temp_dir.createTempDir()
+        text_nlp = tmpdir+'/spacy_nlp.nlp'
+        text_doc.to_disk(text_nlp)
+        text_vocab = tmpdir+'/spacy_vocab.voc'
+        text_doc.vocab.to_disk(text_vocab)
+        print(f'tmpdir : {tmpdir}')
+        return tmpdir
+    except Exception as e:
+        print(f'Unable to save NLP to disk {e}')
+        return None
 
 actions = Blueprint('actions',__name__)
+## Cleaning tmp folder
+cleantmp.main()
+
+nlp = spacy.load(config.BASE_MODEL)
+# neuralcoref.add_to_pipe(nlp)
+# nlp.add_pipe('sentencizer')
+# nlp.add_pipe(nlp.create_pipe('sentencizer'))
 
 print('calling actions')
 
@@ -37,7 +56,6 @@ def scrape():
             try:
                 text = scrapper.scrape_text(web_url)
                 text_df,text = cleaner.clean_data(text)
-                # print(f'length of cleaned text scrape : {len(text)}')
                 if len(text) > 1:
                     print(f'length of text scraped:{len(text)}')
                     return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
@@ -53,19 +71,24 @@ def extract():
         return render_template('home.html')
     if request.method == 'POST':
         web_url = request.form.get('weburl')
-        nlp = spacy.load('en_core_web_sm')
-        neuralcoref.add_to_pipe(nlp)
-        # print(f'web_url:{web_url}')
-        # text = request.form.get('cleantextarea')
         text = request.form.get('cleantext')
         print(f'length of clean text: {len(text)}')
-        # print(text)
+
+
         '''defining the pipeline'''
-        # nlp = spacy.load('en_core_web_sm',n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
-        svo_df, text_doc = svo_extractor.svo(text,nlp)
-        # print(f'type of text_doc ---> {type(text_doc)}')
-        # print(len(svo_df))
-        # print(svo_df.head(7))
+
+        
+        text = text.lower()
+        text_doc = nlp(text)
+        n_word_tokens = len(word_tokenize(text))
+
+        svo_df, text_doc = svo_extractor.svo(text_doc,nlp)
+        print(f'n_word_tokens : {n_word_tokens}')
+
+        ## Saving NLP
+        tmpdir = save_nlp_to_disk(text_doc)
+    
+
         triplets_found = False
         headings = svo_df.columns
         data_tuple = []
@@ -88,12 +111,6 @@ def extract():
             figdata_png = base64.b64encode(figfile.getvalue()).decode('ascii')
                         
             session['image_base64'] = figdata_png
-            # print('printing --- text_doc')
-            # print(text_doc)
-            session['text_doc'] = str(text_doc)
-            # session['nlp'] = nlp
-            # session['headings'] = headings
-            # session['data_tuple'] = data_tuple
 
             session['svo_df'] = svo_df.to_json()
 
@@ -107,34 +124,27 @@ def extract():
                                     svo_table = [svo_df.to_html()], titles=[''],
                                     text_doc = text_doc,
                                     nlp = nlp,
-                                    display_svo = True)
+                                    display_svo = True,
+                                    tmpdir = tmpdir)
         else:
             
             session['svo_df'] = svo_df.to_json()
-            # full_fileName = '*/static/images/no-image-available.jpeg'
             cwd = os.getcwd()
             img = Image.open(str(cwd)+"/website/static/images/no-image-available.jpeg")
-            # img = Image.open("/static/images/no-image-available.jpeg")
             buf = BytesIO()
             img.save(buf, format = 'jpeg')
             img.close()
             buf.seek(0)
             encoded_string = base64.b64encode(buf.getvalue()).decode('ascii')
-            # encoded_string = base64.b64encode(img).decode('ascii')
             session['image_base64'] = encoded_string
-            # print(session.get('image_base64'))
-            # print(text_doc)
-            session['text_doc'] = str(text_doc)
-            # session['nlp'] = nlp
-            # session['headings'] = headings
-            # session['data_tuple'] = data_tuple
             return render_template('home.html',image_base64=encoded_string, weburl = web_url, cleantext = text, 
                                     triplets_found = triplets_found, headings = headings, data = data_tuple, 
                                     svo_df = svo_df, 
                                     svo_table = [svo_df.to_html()], titles=[''],
                                     text_doc = text_doc,
                                     nlp = nlp,
-                                    display_svo = True)
+                                    display_svo = True,
+                                    tmpdir = tmpdir)
 
 @actions.route('/queryQuestion', methods=['POST'])
 def queryQuestion():
@@ -146,17 +156,21 @@ def queryQuestion():
         triplets_found = request.form.get('triplets_found')
         headings = request.form.get('headings')
         data_tuple = request.form.get('data')
-        # text_doc = request.form.get('text_doc')
-        # nlp = request.form.get('nlp')
         
-        # headings = session.get('headings')
-        # data_tuple = session.get('data_tuple')
-        text_doc = session.get('text_doc')
-        # nlp = session.get('nlp')
+        print(create_temp_dir.get_temp_dir())
+        ## Loading NLP
+        if request.form.get('tmpdir') is None or request.form.get('tmpdir') == "None" \
+            or request.form.get('tmpdir') == "":
+            if create_temp_dir.get_temp_dir() is None or create_temp_dir.get_temp_dir() == "None" \
+                or create_temp_dir.get_temp_dir() == "":
+                text_doc = nlp(text)
+                save_nlp_to_disk(text_doc)
+            else:
+                text_doc = Doc(nlp.vocab).from_disk(create_temp_dir.get_temp_dir()+'/spacy_nlp.nlp')
+        else:
+            text_doc = Doc(nlp.vocab).from_disk(request.form.get('tmpdir')+'/spacy_nlp.nlp')
 
-        nlp = spacy.load('en_core_web_sm')
-        neuralcoref.add_to_pipe(nlp)
-        text_doc = nlp(text_doc)
+        print(f'queryQuestion: text_doc: {type(text_doc)}')
 
         svo_df = pd.read_json(session.get('svo_df'), dtype=False)
         headings = svo_df.columns
@@ -169,37 +183,24 @@ def queryQuestion():
 
         question = request.form.get('question')
         print(f'Question : {question}')
-        
         short_answers = ''
         detailed_answers = ''
         answer, question_lemma_, question_pos_ = query.short_answer_question(question,text_doc, nlp, svo_df)
-        # answers.print_answers(question, answer, question_lemma_, question_pos_)
         short_answers_found = False
         short_answer_length = 0
         if len(answer) > 0:
             short_answers_found = True
             for ans in answer:
-                # short_answers = short_answers + '\n' + str(answer).replace('{','').replace('}','').replace
                 short_answers = '\n'.join(answer)
                 short_answer_length += 1
-                # print(answer)
-            # short_answers = short_answers.replace('\n','',1)
         answer, question_lemma_, question_pos_ = query.detailed_answer_question(question,text_doc, nlp, svo_df)
-        # answers.print_answers(question, answer, question_lemma_, question_pos_)
         detailed_answers_found = False
         detailed_answer_length = 0
         if len(answer) > 0:
             detailed_answers_found = True
             for ans in answer:
-                # detailed_answers = detailed_answers + '\n' + str(answer)
-                # print(f'ans ------> {ans}')
-                # ans1 = ''
-                # for a in ans:
-                #     ans1 = ''.join(str(a))
                 detailed_answers = '\n'.join(answer)
                 detailed_answer_length += 2
-                # print(answer)
-            # detailed_answers = detailed_answers.replace('\n','',1)
         no_answer_found = False
         qanswer = ''
         if not short_answers_found:
@@ -223,3 +224,4 @@ def queryQuestion():
                                         short_answer_length = short_answer_length,
                                         detailed_answer_length = detailed_answer_length,
                                         display_svo = True)
+

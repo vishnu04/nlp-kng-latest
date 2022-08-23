@@ -75,3 +75,5 @@ urllib3==1.26.9
 wasabi==0.10.1
 Werkzeug==2.2.1
 zipp==3.8.1
+gensim==4.2.0
+flask_socketio==5.2.0

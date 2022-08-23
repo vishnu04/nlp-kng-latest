@@ -2,3 +2,5 @@ nlp-venv/
 .gitignore
 flask_session/
 neuralcoref/
+.ipynb_checkpoints/
+.github/

@@ -29,8 +29,11 @@ TRAIN_BATCH_SIZE = 32
 VALID_BATCH_SIZE = 8
 EPOCHS = 10
 
+TMP_PATH = '../../tmp/'
+TMP_DAYS = 1
+
 # BASE_MODEL = 'bert-large-uncased-whole-word-masking-finetuned-squad'
-BASE_MODEL = 'en_core_web_sm'
+BASE_MODEL = 'en_core_web_lg'
 MODEL_PATH = 'model'
 # TOKENIZER = BertTokenizer.from_pretrained(BASE_MODEL, 
 #                                           do_lower_case = True)

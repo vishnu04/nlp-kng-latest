@@ -7,6 +7,7 @@ import pandas as pd
 # import neuralcoref
 from textacy import keyterms
 from . import config
+from spacy.tokens import DocBin
 
 ''' Extracting Subject Verb Object triplets from text'''
 def extract_SVO(text):
@@ -17,21 +18,25 @@ def extract_SVO(text):
         tuples_to_list.append(tuples_list)
     return tuples_to_list
 
-@config.timer
-def svo(text, nlp):
-    # text = ''
-    # for index, line in text_df.iterrows():
-    #     text = text + ' ' +line.sentences
 
-    '''Converting text into Document'''
-    # print(text)
-    text = text.lower()
-    print('Entered svo')
-    text_doc = nlp(text)
-    print('Entered svo')
-    text_doc = text_doc._.coref_resolved
-    print('Entered svo')
-    text_doc = nlp(text_doc)
+
+@config.timer
+def svo(text_doc, nlp):
+# def svo(docs_byte_data, nlp):
+
+    # '''Converting text into Document'''
+    # text = text.lower()
+    # print('Entered svo')
+    # text_doc = nlp(text)
+    # print('Entered svo')
+    # text_doc = text_doc._.coref_resolved
+    # print('Entered svo')
+    # text_doc = nlp(text_doc)
+    # doc_bin = DocBin().from_bytes(docs_byte_data)
+    # text_doc = list(doc_bin.get_docs(nlp.vocab))
+    # text_doc = text 
+    # print(text_doc)
+
     print('Entered svo')
     '''For displaying in webpage'''
     # displacy.render(text_doc,style="ent")
@@ -46,6 +51,7 @@ def svo(text, nlp):
             obj = ' '.join([str(n) for n in o])
             svo_df.loc[len(svo_df)] = [subj,verb,obj]
     new_svo_df = pd.DataFrame(columns = ['subject','verb','object'])
+    print(svo_df.head(5))
 
     for index, svo_tuple in svo_df.iterrows():
         if set(["PROPN",'NOUN']) & set([tok.pos_ for tok in nlp(svo_tuple.subject)]):
@@ -61,8 +67,8 @@ def svo(text, nlp):
 # if __name__ == "__main__":
     
 #     '''defining the pipeline'''
-#     # nlp = spacy.load('en_core_web_sm',n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
-#     nlp = spacy.load('en_core_web_sm')
+#     # nlp = spacy.load('en_core_web_lg',n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
+#     nlp = spacy.load('en_core_web_lg')
 #     neuralcoref.add_to_pipe(nlp)
     
 #     '''Reading the text'''
