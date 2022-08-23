@@ -41,17 +41,17 @@ WORKDIR /usr/src/nlp-kng
 COPY ./requirements.txt ./requirements.txt
 COPY . .
 
-RUN git clone https://github.com/huggingface/neuralcoref.git
-RUN cd neuralcoref && \
-    pip3 install -r requirements.txt && \
-    pip3 install -e .
+# RUN git clone https://github.com/huggingface/neuralcoref.git
+# RUN cd neuralcoref && \
+#     pip3 install -r requirements.txt && \
+#     pip3 install -e .
 
-RUN cd .. 
-RUN mv neuralcoref neuralcoref_dummy
-RUN mv neuralcoref_dummy/neuralcoref /usr/local/lib/python3.7/dist-packages
+# RUN cd .. 
+# RUN mv neuralcoref neuralcoref_dummy
+# RUN mv neuralcoref_dummy/neuralcoref /usr/local/lib/python3.7/dist-packages
 
 RUN pip3 install -r requirements.txt
-RUN python -m spacy download en_core_web_sm
+RUN python -m spacy download en_core_web_lg
 RUN pip3 install nltk
 RUN python -c "import nltk;nltk.download('punkt', download_dir='/usr/local/nltk_data')"
 
@@ -63,7 +63,7 @@ RUN python -c "import nltk;nltk.download('punkt', download_dir='/usr/local/nltk_
 # RUN pip3 install -e git+https://github.com/huggingface/neuralcoref.git
 # RUN pip3 install -r requirements.txt
 # RUN pip install neuralcoref --no-binary neuralcoref
-# RUN python -m spacy download en_core_web_sm
+# RUN python -m spacy download en_core_web_lg
 # RUN python -m nltk.downloader punkt
 # RUN pip uninstall spacy
 # RUN pip uninstall neuralcoref

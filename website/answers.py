@@ -48,8 +48,8 @@ def return_answers(quest, unique_statements, question_lemma, question_pos):
 # if __name__ == "__main__":
     
 #     '''defining the pipeline'''
-#     # nlp = spacy.load('en_core_web_sm',n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
-#     nlp = spacy.load('en_core_web_sm')
+#     # nlp = spacy.load(config.BASE_MODEL,n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
+#     nlp = spacy.load(config.BASE_MODEL)
 #     neuralcoref.add_to_pipe(nlp)
     
 #     text = scrapper.scrape_text(config.WEB_URL)

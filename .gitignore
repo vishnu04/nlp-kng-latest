@@ -113,6 +113,10 @@ nlp-venv/
 flask_session/
 .DS_Store
 neuralcoref/
+.ipynb_checkpoints/
+.csv
+.ipynb
+
 
 # Spyder project settings
 .spyderproject

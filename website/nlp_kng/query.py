@@ -1,13 +1,17 @@
-from spacy import displacy
 import textacy
 import pandas as pd
 from . import config
 import itertools 
+from . import synonyms_extractor 
 
 def peek(iterable):
     try:
         first = next(iterable)
     except AttributeError:
+        print('AttributeError')
+        return None
+    except Exception as e:
+        print(f'Exception Peek: {e}')
         return None
     return first, itertools.chain([first], iterable)
 
@@ -35,6 +39,9 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df):
             question_nouns.append(question_lemma[i])
         if pos in ['VERB','ROOT']:
             question_verbs.append(question_lemma[i])
+
+    question_verbs = synonyms_extractor.get_synonyms(question_verbs,svo_df)
+
     for noun in question_nouns:
         for verb in question_verbs:
             if noun != verb:
@@ -67,25 +74,6 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df):
         if len(answer_facts) >0 :
             return answer_facts, question_lemma, question_pos
     return unique_statements, question_lemma, question_pos
-            # print('\n')
-            # print(f'Question: {quest}')
-            # print("Short Answers:")
-            # for fact in answer_facts:
-                # print(fact)
-        # else:
-        #     print('\n')
-        #     print(f'Question: {quest}')
-        #     print(f'Question Lemma: {question_lemma}\tQuestion Pos: {question_pos}')
-        #     print(f"Answer: No answer derived from given Knowledge Graph.\n")
-    # else:
-    #     print('\n')
-    #     print(f'Question: {quest}')
-    #     print(f'Question Lemma: {question_lemma}\tQuestion Pos: {question_pos}')
-    #     print(f"Answer: No answer derived from given Knowledge Graph.\n")
-
-
-
-# question_doc = textacy.make_spacy_doc(test_string, lang='en_core_web_sm')
 
 @config.timer
 def detailed_answer_question(quest,spacy_doc,nlp, svo_df):
@@ -100,10 +88,6 @@ def detailed_answer_question(quest,spacy_doc,nlp, svo_df):
         question_pos.append(' '.join([listitem.pos_ for listitem in q_ngrams]))
         question_lemma.append(' '.join([listitem.text for listitem in q_ngrams]))
         question_pos.append(' '.join([tok.pos_ for tok in nlp(str(q_ngrams))]))
-    #print(question_lemma, question_pos)
-
-    #question_lemma = list(set(question_lemma))
-    #question_pos = list(set(question_pos))
     
     '''Code to extract semistructed statements from text_doc'''
     unique_statements =set()
@@ -114,41 +98,31 @@ def detailed_answer_question(quest,spacy_doc,nlp, svo_df):
             question_nouns.append(question_lemma[i])
         if pos in ['ADV','VERB','ROOT']:
             question_verbs.append(question_lemma[i])
+    # print(f'spacy_doc :{spacy_doc}')
+    question_verbs = synonyms_extractor.get_synonyms(question_verbs,svo_df)
     for noun in question_nouns:
         for verb in question_verbs:
             if noun != verb:
                 statements = textacy.extract.semistructured_statements(spacy_doc,entity= noun, cue= verb,max_n_words = 200,)
                 # res = peek(statements)
                 res = 1
-                # print(f' Res is none -----> {res} \n\n\n\n')
-                if res:
-                    for statement in statements:
-                        unique_statements.add(statement)
-    # return unique_statements, question_lemma, question_pos
+                print(f' Res is none -----> {res} {noun} {verb}')
+                if res is None:
+                    res = 1
+                try:
+                    if res:
+                        for statement in statements:
+                            unique_statements.add(statement)
+                except Exception as e:
+                    print(f'Error in detailed answers extract. textacy : {e}')
     if len(unique_statements) > 0 :
         no_of_facts = len(unique_statements)
         n = 1
         for statement in unique_statements:
                 entity, cue, fact = statement
-                #print("* entity:",entity, ", cue:", cue, ", fact:", fact)
                 if len(fact) > 0:
                     if str(entity).lower() != str(cue).lower():
                         answer_facts.append(f'\t{n}. {entity} - {cue} - {fact}')
                         n += 1
-                        # print(f'Answer: {entity} - {cue} - {fact}')
-        # if len(answer_facts) >0 :
         return answer_facts, question_lemma, question_pos
     return unique_statements, question_lemma, question_pos
-            # print('\n')
-            # print(f'Question: {quest}')
-            # print("Detailed Answers:")
-            # for fact in answer_facts:
-            #     print(fact)
-    #     else:
-    #         short_answer_question(quest,spacy_doc)
-    #         #print(f'Question Lemma: {question_lemma}\tQuestion Pos: {question_pos}')
-    #         #print(f"Answer: No answer derived from given Knowledge Graph.\n")
-    # else:
-    #     short_answer_question(quest,spacy_doc)
-    #     #print(f'Question Lemma: {question_lemma}\tQuestion Pos: {question_pos}')
-    #     #print(f"Answer: No answer derived from given Knowledge Graph.\n")
