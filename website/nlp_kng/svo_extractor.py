@@ -5,7 +5,7 @@ from spacy import displacy
 import textacy
 import pandas as pd
 # import neuralcoref
-from textacy import keyterms
+# from textacy import keyterms
 from . import config
 from spacy.tokens import DocBin
 

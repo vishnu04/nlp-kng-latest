@@ -2,7 +2,8 @@ import textacy
 import pandas as pd
 from . import config
 import itertools 
-from . import synonyms_extractor 
+from . import synonyms_extractor
+from . import svo_extractor 
 
 def peek(iterable):
     try:
@@ -35,13 +36,16 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df):
     question_verbs = []
     answers_df = pd.DataFrame(columns = ['subject','verb','object'])
     for i, pos in enumerate(question_pos):
+        print(i,pos)
         if pos in ['NOUN','PROPN']:
             question_nouns.append(question_lemma[i])
         if pos in ['VERB','ROOT']:
             question_verbs.append(question_lemma[i])
-
+    print(f'short_answer question verbs:{question_verbs}')
+    print(f'short_answer question nouns:{question_nouns}')
     question_verbs = synonyms_extractor.get_synonyms(question_verbs,svo_df)
-
+    qsvo_df, qtext_doc = svo_extractor.svo(question_doc,nlp)
+    print(qsvo_df)
     for noun in question_nouns:
         for verb in question_verbs:
             if noun != verb:

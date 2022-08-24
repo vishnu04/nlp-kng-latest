@@ -2,26 +2,28 @@ FROM ubuntu:18.04
 
 # Upgrade installed packages
 RUN apt-get update && apt-get upgrade -y && apt-get clean
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository ppa:deadsnakes/ppa
+RUN apt update
+RUN apt install python3.6
+RUN ln -s /usr/bin/python3 /usr/bin/python
+RUN apt-get install -y python3-pip
+RUN pip3 install --upgrade pip setuptools wheel
 
 # Python package management and basic dependencies
-RUN apt-get install -y curl python3.7 python3.7-dev python3.7-distutils wget
-RUN apt-get -y install gcc make build-essential libssl-dev libffi-dev python3.7-dev
-RUN apt-get -y install git python3-venv
+# RUN apt-get install -y curl python3.7 python3.7-dev python3.7-distutils wget
+# RUN apt-get -y install gcc make build-essential libssl-dev libffi-dev python3.7-dev
+# RUN apt-get -y install git python3-venv
 
-# Register the version in alternatives
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
-
-# Set python 3 as the default python
-RUN update-alternatives --set python /usr/bin/python3.7
 
 # Upgrade pip to latest version
-RUN curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py --force-reinstall && \
-    rm get-pip.py && \
-    python -m pip install --upgrade setuptools pip wheel && \
-    python -m pip install --upgrade pip && \
-    python -m pip install --upgrade wheel && \
-    python -m pip install gunicorn
+# RUN curl -s https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+#     python get-pip.py --force-reinstall && \
+#     rm get-pip.py && \
+#     python -m pip install --upgrade setuptools pip wheel && \
+#     python -m pip install --upgrade pip && \
+#     python -m pip install --upgrade wheel && \
+#     python -m pip install gunicorn
 
 # RUN apt-get update -y
 # RUN apt-get install -y python3.7 python3-pip python3.7-dev python3.7-distutils 
@@ -49,7 +51,7 @@ COPY . .
 # RUN cd .. 
 # RUN mv neuralcoref neuralcoref_dummy
 # RUN mv neuralcoref_dummy/neuralcoref /usr/local/lib/python3.7/dist-packages
-
+# RUN pip3 install scikit-learn
 RUN pip3 install -r requirements.txt
 RUN python -m spacy download en_core_web_lg
 RUN pip3 install nltk

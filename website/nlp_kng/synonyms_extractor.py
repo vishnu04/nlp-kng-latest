@@ -25,6 +25,8 @@ model = pickle.load(open(model_path+"gensim_text8_model","rb"))
 def get_synonyms(verbs, svo_df):
     syn_verbs = []
     ## for question verbs
+    print(verbs)
+    # print(svo_df)
     for verb in verbs:
         if verb in model.wv.key_to_index:
             syn_verbs.append(verb)
