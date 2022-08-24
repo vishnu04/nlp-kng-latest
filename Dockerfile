@@ -8,6 +8,7 @@ RUN apt update
 RUN apt install python3.6
 RUN ln -s /usr/bin/python3 /usr/bin/python
 RUN apt-get install -y python3-pip
+
 RUN pip3 install --upgrade pip setuptools wheel
 
 # Python package management and basic dependencies
