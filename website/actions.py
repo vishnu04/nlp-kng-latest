@@ -167,10 +167,15 @@ def queryQuestion():
                 save_nlp_to_disk(text_doc)
             else:
                 text_doc = Doc(nlp.vocab).from_disk(create_temp_dir.get_temp_dir()+'/spacy_nlp.nlp')
+                # neuralcoref.add_to_pipe(nlp)
+                # text_doc = nlp(text)
         else:
             text_doc = Doc(nlp.vocab).from_disk(request.form.get('tmpdir')+'/spacy_nlp.nlp')
+            # neuralcoref.add_to_pipe(nlp)
+            # text_doc = nlp(text)
 
         print(f'queryQuestion: text_doc: {type(text_doc)}')
+        # print(text)
 
         svo_df = pd.read_json(session.get('svo_df'), dtype=False)
         headings = svo_df.columns
