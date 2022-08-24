@@ -56,7 +56,7 @@ def main():
 					print(f'file deleted {folder_path}')
 					deleted_folders_count += 1 # incrementing count
 
-
+			
 			# checking the current directory files
 			for file in files:
 
@@ -67,8 +67,8 @@ def main():
 				if seconds >= get_file_or_folder_age(file_path):
 
 					# invoking the remove_file function
-					remove_file(path)
-					print(f'file deleted {path}')
+					remove_file(file_path)
+					print(f'file deleted {file_path}')
 					deleted_files_count += 1 # incrementing count
 
 		# else:
@@ -110,16 +110,18 @@ def remove_folder(path):
 def remove_file(path):
 
 	# removing the file
-	if not os.remove(path):
+	try:
+		if not os.remove(path):
 
-		# success message
-		print(f"{path} is removed successfully")
+			# success message
+			print(f"{path} is removed successfully")
 
-	else:
+		else:
 
-		# failure message
-		print(f"Unable to delete the {path}")
-
+			# failure message
+			print(f"Unable to delete the {path}")
+	except Exception as e:
+		print(f'Unable to remove the file {path}. Exception: {e}')
 
 def get_file_or_folder_age(path):
 

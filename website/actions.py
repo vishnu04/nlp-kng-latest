@@ -46,6 +46,8 @@ def home():
 @actions.route('/scrape', methods=['POST'])
 def scrape():
     print(f'calling scrape {request.method}')
+    ## Cleaning tmp folder
+    cleantmp.main()
     if request.method == 'POST':
         web_url = request.form.get("weburl")
         print(web_url)
