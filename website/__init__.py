@@ -13,6 +13,9 @@ __all__ = [
     'models'
 ]
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'asdfasdf asdfsadsg'

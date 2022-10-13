@@ -10,9 +10,18 @@ def createTempDir():
     print(directory_name)
     return directory_name
 
+def createSvoTempDir():
+    tmp_dir_name = get_temp_dir()
+    print('tmp_dir_name -->',tmp_dir_name)
+    svo_df_temp_path = tmp_dir_name +'/svo_df_temp' #os.path.join(tmp_dir_name, '/svo_df_temp')
+    print(f'svo_df_temp_path --> {svo_df_temp_path}')
+    isExist = os.path.exists(svo_df_temp_path)
+    try:
+        os.mkdir(svo_df_temp_path)
+    except Exception as e:
+        print('Svo_dir already exists', e)
+    print(svo_df_temp_path)
+    return svo_df_temp_path
+
 def get_temp_dir():
     return directory_name
-
-# if __name__ == '__main__':
-#     tmpdir = create_temp_dir()
-#     print(tmpdir)

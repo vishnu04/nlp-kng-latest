@@ -84,13 +84,29 @@
           <div class="input-group-append">
             <button class="btn btn-outline-secondary" type="submit" value="submit">Submit</button>
           </div>
+          
+          <!-- <br>
+          <div class="container" align="left">
+            <br>
+            <h2><label for="cleantext">Web Scraped and Cleaned Text</label></h2>
+            <textarea class="form-control" name="cleantext" id='cleantext' aria-label="cleantext"
+              aria-describedby="inputGroup-sizing-sm mb-3" placeholder="NA" rows="15">{{ cleantext }}</textarea>
+            <br>
+            <button align='Right' class="btn btn-primary" type="submit" value="submit">Look's Good</button>
+          </div> -->
+
         </div>
+
       </div>
       <br>
     </div>
+
+   
+
   </form>
 
   <form action="{{url_for('actions.extract')}}" class="form-container" method="POST">
+
     <div class="form-group" align="center">
       {% if cleantext %}
       <div class="container" align="left">
@@ -102,13 +118,9 @@
       </div>
       <input type="hidden" id="weburl" name="weburl" value="{{ weburl }}">
       <br>
-      <!-- <div class="input-group-append"> -->
-      <!-- <div class="form-group"> -->
-      <!-- <br> -->
-      <!-- <button align='Right' class="btn btn-primary" type="submit" value="submit">Look's Good</button> -->
-      <!-- </div> -->
       {% endif %}
     </div>
+
     {% if display_svo %}
     {% if triplets_found %}
     <div class="container" align="center">

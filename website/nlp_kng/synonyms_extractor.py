@@ -24,16 +24,12 @@ model = pickle.load(open(model_path+"gensim_text8_model","rb"))
 
 def get_synonyms(verbs, svo_df):
     syn_verbs = []
-    ## for question verbs
-    print(verbs)
-    # print(svo_df)
     for verb in verbs:
         if verb in model.wv.key_to_index:
             syn_verbs.append(verb)
             for key, value in model.wv.most_similar(verb):
                 if round(value) >= 0.5:
                     syn_verbs.append(key)
-    print(syn_verbs)
     new_syn_verbs = []
     for syn_verb in syn_verbs:
         if syn_verb in model.wv.key_to_index:
@@ -43,5 +39,15 @@ def get_synonyms(verbs, svo_df):
                         if model.wv.similarity(syn_verb, verb) >= 0.5:
                             new_syn_verbs.append(verb)
     new_syn_verbs = list(set(new_syn_verbs))
-    print(new_syn_verbs)
+    return new_syn_verbs
+
+def get_verb_synonyms(verbs):
+    syn_verbs = []
+    for verb in verbs:
+        if verb in model.wv.key_to_index:
+            syn_verbs.append(verb)
+            for key, value in model.wv.most_similar(verb):
+                if round(value) >= 0.5:
+                    syn_verbs.append(key)
+    new_syn_verbs = list(set(syn_verbs))
     return new_syn_verbs
