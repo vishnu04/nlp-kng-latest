@@ -37,3 +37,29 @@ BASE_MODEL = 'en_core_web_lg'
 MODEL_PATH = 'model'
 # TOKENIZER = BertTokenizer.from_pretrained(BASE_MODEL, 
 #                                           do_lower_case = True)
+
+
+## 
+
+ROBERTA_LARGE_MODEL = 'stsb-roberta-large'
+TENSORFLOW_HUB_MODULE_URL = "https://tfhub.dev/google/universal-sentence-encoder/4"
+GLOVE_MODEL = "glove-wiki-gigaword-100"
+KERAS_SEMANTIC_SIMILARITY = 'bert-semantic-similarity'
+ALL_MPNET_BASE_MODEL = 'all-mpnet-base-v2'
+QA_BASE_MPNET_MODEL = "multi-qa-mpnet-base-cos-v1"
+CORENLP_DIR = '../../stanza_nlp'
+
+
+## 
+
+STANZA_PATH = r"../../stanford-corenlp-4.5.1"
+STANZA_MODEL_JAR = r"stanford-corenlp-4.5.1-models.jar"
+STANZA_JAR = r"stanford-corenlp-4.5.1.jar"
+
+##
+# SUB_VERB_OBJ_DF_COLS = ['subject','verb','object','sentence','reason_flag','qa_base_mpnet_embeddings']
+SUB_VERB_OBJ_DF_COLS = ['subject','verb','object','sentence','reason_flag']
+
+## 
+QA_BASE_MPNET_MODEL_CONF = 0.5
+QA_BASE_MPNET_MODEL_TOPN = 20
