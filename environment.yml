@@ -1,0 +1,6 @@
+name: nlp_kng_venv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - flask
