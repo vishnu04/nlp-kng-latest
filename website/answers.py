@@ -1,8 +1,4 @@
-from .nlp_kng import cleaner, kg_generator, query, scrapper, svo_extractor
 from .nlp_kng import config
-import neuralcoref
-import networkx as nx
-import spacy
 
 @config.timer
 def print_answers(quest, unique_statements, question_lemma, question_pos):
@@ -39,35 +35,6 @@ def return_answers(quest, unique_statements, question_lemma, question_pos):
         n = 1
         for statement in unique_statements:
             answer_facts.append(f'\t{statement}')
-            # n += 1
+            n += 1
         return answer_facts
     return None
-
-
-
-# if __name__ == "__main__":
-    
-#     '''defining the pipeline'''
-#     # nlp = spacy.load(config.BASE_MODEL,n_threads=LEMMATIZER_N_THREADS,  batch_size=LEMMATIZER_BATCH_SIZE)
-#     nlp = spacy.load(config.BASE_MODEL)
-#     neuralcoref.add_to_pipe(nlp)
-    
-#     text = scrapper.scrape_text(config.WEB_URL)
-    
-#     text_df, clean_text = cleaner.clean_data(text)
-#     svo_df, text_doc = svo_extractor.svo(clean_text, nlp)
-#     kng_G = kg_generator.plot_kg(svo_df)
-
-
-#     question = "what is the impact of prices increase?"
-#     answers, question_lemma_, question_pos_ = query.short_answer_question(question,text_doc, nlp, svo_df)
-#     print_answers(question, answers, question_lemma_, question_pos_)
-    
-#     answers, question_lemma_, question_pos_ = query.detailed_answer_question(question,text_doc, nlp, svo_df)
-#     print_answers(question, answers, question_lemma_, question_pos_)
-
-
-    # question = "what causes Inflation?"
-    # answer_question(question, text_doc)
-    # question = "what policy can increase?"
-    # answer_question(question, text_doc)
