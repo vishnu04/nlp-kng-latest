@@ -1,0 +1,105 @@
+benzene causes acute myeloid leukemia and probably other hematological malignancies. as benzene also causes hematotoxicity even in workers exposed to levels below the us permissible occupational exposure limit of 1 part per million, further assessment of the health risks associated with its exposure, particularly at low levels, is needed. here, we describe the probable mechanism by which benzene induces leukemia involving the targeting of critical genes and pathways through the induction of genetic, chromosomal or epigenetic abnormalities and genomic instability, in a hematopoietic stem cell (hsc); stromal cell dysregulation; apoptosis of hscs and stromal cells and altered proliferation and differentiation of hscs. these effects modulated by benzene-induced oxidative stress, aryl hydrocarbon receptor dysregulation and reduced immunosurveillance, lead to the generation of leukemic stem cells and subsequent clonal evolution to leukemia. a mode of action (moa) approach to the risk assessment of benzene was recently proposed. this approach is limited, however, by the challenges of defining a simple stochastic moa of benzene-induced leukemogenesis and of identifying relevant and quantifiable parameters associated with potential key events. an alternative risk assessment approach is the application of toxicogenomics and systems biology in human populations, animals and in vitro models of the hsc stem cell niche, exposed to a range of levels of benzene. these approaches will inform our understanding of the mechanisms of benzene toxicity and identify additional biomarkers of exposure, early effect and susceptibility useful for risk assessment.
+
+# /bin/sh: 13: /root/.bashrc: shopt: not found                                                                   
+ => => # /bin/sh: 21: /root/.bashrc: shopt: not found                                                                   
+ => => # Collecting package metadata (current_repodata.
+
+RUN conda activate venv CommandNotFoundError: Your shell has not been properly configured to use 'conda activate'.  To initialize your shell, run 
+
+9265 - last 4 digits
+5728
+
+Stats
+ML in python
+Prescriptive Analytics
+Predictive Analytics
+Network Analytics
+TimeSeries Forecasting
+Supply Chain Analytics 
+
+
+inflation is caused due to an unexpected increases in capital or labor costs.
+inflation causes panic in public.
+
+inflation is caused due to an unexpected increases in capital or labor costs.
+inflation causes panic in public.
+
+subject					verb			object					reason_flag
+costs increases	caused 	inflation.                 True
+inflation				causes		public panic			  False
+
+what is the reason for inflation? 
+CheckFlag = true
+ans: costs increase inflation -- reason_flag = True 
+
+what is the cause for inflation ?
+checkFlag = True
+ans: costs increase inflation -- reason_flag = True 
+
+what is caused by inflation ?
+CheckFlag = False
+ans: inflation causes public panic -- reason_flag = False
+
+what are the effects of inflation ?
+CheckFlag = False
+ans: inflation causes public panic -- reason_flag = False
+
+
+what causes inflation ?
+checkFlag = False
+ans: costs increase inflation -- reason_flag = True 
+
+what inflation causes ?
+checkFlag = False
+ans: inflation causes public panic -- reason_flag = False
+
+#######################################################
+
+apt install apache2
+apt install libapache2-mod-wsgi-py3
+sudo -H pip3 install flask
+
+
+
+cd $HOME_DIR
+
+
+app.wsgi
+
+import sys
+sys.path.insert(0, "/var/www/html/nlp_kng')
+
+from app import app as application
+
+
+
+
+
+sudo cp . /var/www/html - R
+
+sudo nano /etc/apache2/sites-available/000-default.conf
+
+Comment the document root
+
+WSGIScriptAlias /  /var/www/html/nlp_kng/app.wsgi
+<Directory /var/www/html/nlp_kng>
+Order allow,deny
+Allow from all
+</Directory>
+
+
+sudo service apache2 restart
+
+
+tail /var/log/apache2/error.log
+
+/usr/libexec/java_home -V | grep jdk
+ export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-18.0.2.jdk/Contents/Home
+ export PATH=$JAVA_HOME/bin:$PATH
+ 
+ 
+ opt/homebrew/etc/httpd
+
+
+
+

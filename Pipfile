@@ -1,0 +1,40 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+beautifulsoup4 = "*"
+bs4 = "*"
+flask = "*"
+flask-session = "*"
+flask-socketio = "*"
+gensim = "*"
+huggingface-hub = "*"
+jupyter = "*"
+keras = "*"
+matplotlib = "*"
+networkx = "*"
+nltk = "*"
+numpy = "*"
+pandas = "*"
+regex = "*"
+requests = "*"
+scikit-learn = "*"
+scipy = "*"
+seaborn = "*"
+sentence-transformers = "*"
+spacy = "==3.4.1"
+stanza = "*"
+textacy = "*"
+textblob = "*"
+tokenizers = "*"
+torch = "*"
+tqdm = "*"
+transformers = "*"
+urllib3 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

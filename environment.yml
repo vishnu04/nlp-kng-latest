@@ -1,4 +1,4 @@
-name: nlp_kng_venv
+name: base
 channels:
   - conda-forge
 dependencies:

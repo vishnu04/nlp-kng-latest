@@ -80,14 +80,23 @@ def extract():
         web_url = request.form.get('weburl')
         text = request.form.get('cleantext')
         print(f'length of clean text: {len(text)}')
-
+        print(f'no of sentences before clean--> {len(text.splitlines())}')
+        if len(text) > 0:
+            text_df,text = cleaner.clean_data(text)
+        print(f'no of sentences after clean--> {len(text.splitlines())}')
+        
+        # if len(text_df) > 0:
+        #     text_df.to_csv('text_df.csv', index = True)
         '''defining the pipeline'''        
         text = text.lower()
         text_doc = nlp(text)
         n_word_tokens = len(word_tokenize(text))
 
         svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+        svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
         print(f'n_word_tokens : {n_word_tokens}')
+        # if len(svo_df) > 0:
+        #     svo_df.to_csv('svo_df.csv', index = True)
 
         ## Saving NLP
         tmpdir = save_nlp_to_disk(text_doc)
@@ -198,9 +207,9 @@ def queryQuestion():
         print(f'Question : {question}')
         short_answers = ''
         detailed_answers = ''
-        question_svo_df, check_cause, question_embedding = stanza_svo_extractor.triplet_extraction('',qa_mpnet_base_model, question, output = ['result'])
-        # print('question_embedding --> ', question_embedding)
-        danswer, question_lemma_, question_pos_, danswer_index = query.detailed_answer_question(qa_mpnet_base_model,question,text_doc, nlp, svo_df, question_embedding, sentence_embeddings, check_cause)
+        question_svo_df, check_cause, question_embedding = stanza_svo_extractor.triplet_extraction('',nlp,qa_mpnet_base_model, question, output = ['result'])
+        print('question_svo_df --> ', question_svo_df)
+        danswer, question_lemma_, question_pos_, danswer_index = query.detailed_answer_question(qa_mpnet_base_model,question,text_doc, nlp, svo_df, question_embedding, sentence_embeddings, question_svo_df, check_cause)
         detailed_answers_found = False
         detailed_answer_length = 0
         if len(danswer) > 0:

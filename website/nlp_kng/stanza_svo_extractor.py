@@ -7,83 +7,98 @@ import re
 from . import synonyms_extractor, query, models
 # dep_parser = CoreNLPDependencyParser(url='http://localhost:9000')
 # pos_tagger = CoreNLPParser(url='http://localhost:9000', tagtype='pos')
-
-def triplet_extraction (text_doc, model, text, output=['parse_tree','spo','result']):
-    STANFORD = os.path.join(os.getcwd(), "stanford-corenlp")
-    server = CoreNLPServer(os.path.join(STANFORD, "stanford-corenlp-4.5.1.jar"),\
-                          os.path.join(STANFORD, "stanford-corenlp-4.5.1-models.jar"),
-                        )
-    try:
-        print('Starting stanza server -->')
-        server.start()
-    except:
-        try:
-            print('Stoping stanza server -->')
-            server.stop()
-            print('Starting stanza server -->')
-            server.start()
-        except:
-            print('Failed to start Stanza server -->')
-            svo_df = pd.DataFrame(columns = config.SUB_VERB_OBJ_DF_COLS)
-            return svo_df, False
-    dep_parser = CoreNLPDependencyParser()
-    pos_tagger = CoreNLPParser(tagtype='pos')
-    svo_df = pd.DataFrame(columns = config.SUB_VERB_OBJ_DF_COLS)
-    # qa_mpnet_base_model = models.load_qa_mpnet_base_model()
-    qa_mpnet_base_model = model
-    if text_doc != '':
-        sentences = [sent for sent in text_doc.sents]
-    else:
-        sentences = [text]
-    for input_sentence in sentences:
-        input_sent = str(input_sentence)
-        pos_type = pos_tagger.tag(input_sent.split())
-        parse_tree, = ParentedTree.convert(list(pos_tagger.parse(input_sent.split()))[0])
-        dep_type, = ParentedTree.convert(dep_parser.parse(input_sent.split()))
-        # Extract subject, predicate and object
-        subject = extract_subject(parse_tree)
-        predicate = extract_predicate(parse_tree)
-        objects = extract_object(parse_tree)
-        if 'parse_tree' in output:
-            # print('---Parse Tree---')
-            # parse_tree.pretty_print()
-            pass
-        if 'spo' in output:
-            # print('---Subject---')
-            # print(subject)
-            # print('---Predicate---')
-            # print(predicate)
-            # print('---Object---')
-            # print(objects)
-            pass
-        if 'result' in output:
-            # print('---Result---')
-            change_obj_sub, reason_flag = change_subject_object(input_sent, subject[0], predicate[0],objects[0]) 
-            # print(subject[0],predicate[0],objects[0],input_sent)  
-            if change_obj_sub:
-                if len(objects[0].strip()) !=0 and len(predicate[0].strip()) != 0 and len(subject[0].strip()) != 0:
-                    svo_df.loc[len(svo_df)] = [objects[0],predicate[0],subject[0], input_sent, reason_flag]
-                else:
-                    pass
-            else:
-                if len(objects[0].strip()) !=0 and len(predicate[0].strip()) != 0 and len(subject[0].strip()) != 0:
-                    svo_df.loc[len(svo_df)] = [subject[0],predicate[0],objects[0], input_sent, reason_flag]
-                else:
-                    pass
-
-    server.stop()
-    # print(f'Stanza_extract SVO')
-    # print(svo_df.head(5))
+os.environ['CLASSPATH'] = config.STANZA_PATH
+def triplet_extraction (text_doc, nlp, model, text, output=['parse_tree','spo','result']):
+    # STANFORD = os.path.join(os.getcwd(), "stanford-corenlp-4.5.1")
+    # server = CoreNLPServer(os.path.join(STANFORD, "stanford-corenlp-4.5.1.jar"),\
+    #                       os.path.join(STANFORD, "stanford-corenlp-4.5.1-models.jar"),
+    #                     )
     input_sent_embeddings = None
-    print(f'triplet_extraction ---> {len(svo_df)}')
-    if len(svo_df) > 0:
+    # try:
+    #     print('Starting stanza server -->')
+    #     server.start()
+    # except Exception as e:
+    #     print(f'Exception 1 --> {e}')
+    #     try:
+    #         print('Stoping stanza server -->')
+    #         server.stop()
+    #         print('Starting stanza server -->')
+    #         server.start()
+    #     except Exception as e:
+    #         print(f'Exception 2 --> {e}')
+    #         print('Failed to start Stanza server -->')
+    #         svo_df = pd.DataFrame(columns = config.SUB_VERB_OBJ_DF_COLS)
+    #         return svo_df, False, input_sent_embeddings
+    # dep_parser = CoreNLPDependencyParser()
+    # pos_tagger = CoreNLPParser(tagtype='pos')
+    pos_tagger = None
+    svo_df = pd.DataFrame(columns = config.SUB_VERB_OBJ_DF_COLS)
+    try:
+        pos_tagger = CoreNLPParser(url='http://localhost:9001', tagtype='pos')
+        # qa_mpnet_base_model = models.load_qa_mpnet_base_model()
+        qa_mpnet_base_model = model
+        sentences = []
+        for lines in text.splitlines():
+            sentences.append(nlp(lines))
+        print(f'Stanza Svo extract - len of sentences --> : {len(sentences)}')
+        # if text_doc != '':
+        #     sentences = [sent for sent in text_doc.sents]
+        # else:
+        #     sentences = [text]
+        for input_sentence in sentences:
+            input_sent = str(input_sentence)
+            pos_type = pos_tagger.tag(input_sent.split())
+            parse_tree, = ParentedTree.convert(list(pos_tagger.parse(input_sent.split()))[0])
+            # print('Parse_tree -----------------> ')
+            # print(list(pos_tagger.parse(input_sent.split()))[0])
+            # dep_type, = ParentedTree.convert(dep_parser.parse(input_sent.split()))
+            # Extract subject, predicate and object
+            subject = extract_subject(parse_tree)
+            predicate = extract_predicate(parse_tree)
+            objects = extract_object(parse_tree)
+            if 'parse_tree' in output:
+                # print('---Parse Tree---')
+                # parse_tree.pretty_print()
+                pass
+            if 'spo' in output:
+                # print('---Subject---')
+                # print(subject)
+                # print('---Predicate---')
+                # print(predicate)
+                # print('---Object---')
+                # print(objects)
+                pass
+            if 'result' in output:
+                # print('---Result---')
+                change_obj_sub, reason_flag = change_subject_object(input_sent, subject[0], predicate[0],objects[0]) 
+                # print(subject[0],predicate[0],objects[0],input_sent)  
+                if change_obj_sub:
+                    if len(objects[0].strip()) !=0 and len(predicate[0].strip()) != 0 and len(subject[0].strip()) != 0:
+                        svo_df.loc[len(svo_df)] = [objects[0],predicate[0],subject[0], input_sent, reason_flag]
+                    else:
+                        pass
+                else:
+                    if len(objects[0].strip()) !=0 and len(predicate[0].strip()) != 0 and len(subject[0].strip()) != 0:
+                        svo_df.loc[len(svo_df)] = [subject[0],predicate[0],objects[0], input_sent, reason_flag]
+                    else:
+                        pass
+
+        # server.stop()
+        # print(f'Stanza_extract SVO')
+        # print(svo_df.head(5))
+        
         print(f'triplet_extraction ---> {len(svo_df)}')
-        # print(f'triplet_extraction --->')
-        print(list(svo_df['sentence']))
-        input_sent_embeddings = models.gen_qa_mpnet_embeddings(qa_mpnet_base_model, list(svo_df['sentence']))
-    else:
-        input_sent_embeddings = models.gen_qa_mpnet_embeddings(qa_mpnet_base_model, list(sentences))
-    return svo_df, reason_flag,input_sent_embeddings
+        if len(svo_df) > 0:
+            print(f'triplet_extraction ---> {len(svo_df)}')
+            # print(f'triplet_extraction --->')
+            # print(list(svo_df['sentence']))
+            input_sent_embeddings = models.gen_qa_mpnet_embeddings(qa_mpnet_base_model, list(svo_df['sentence']))
+        else:
+            input_sent_embeddings = models.gen_qa_mpnet_embeddings(qa_mpnet_base_model, list(sentences))
+        return svo_df, reason_flag,input_sent_embeddings
+    except Exception as e:
+        print(f'Exception CoreNLPParser -->: {e}')
+        return svo_df, False,None
 
 def change_subject_object (sentence, subj, verb, obj):
     change_sub_obj = False
@@ -205,3 +220,5 @@ def extract_attr (word):
             if p.label().startswith('VB') and p != word.parent():
                 attrs.append(' '.join(p.flatten()))
     return attrs
+
+

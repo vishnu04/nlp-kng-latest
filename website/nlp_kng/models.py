@@ -26,6 +26,9 @@ import numpy as np
 from . import query
 from . import config
 
+import nltk
+from textblob import TextBlob
+
 
 from huggingface_hub import from_pretrained_keras
 
@@ -246,7 +249,7 @@ def semantic_search(model, question_list, response_list, response_df):
     for qidx, hit in enumerate(hits):
         for k in hit:
             # search_result = "\t{:.3f}\t{}".format(k['score'], response_list[k['corpus_id']])
-            search_result = "\t{:.3f}\t{}".format(k['score'], response_df['sentence'][k['corpus_id']]) 
+            search_result = "\t{:.3f}\t{}".format(float(k['score'])*10, response_df['sentence'][k['corpus_id']]) 
             semantic_search_output.add(search_result)
     return semantic_search_output 
 
@@ -274,11 +277,21 @@ def load_qa_mpnet_base_model():
 
 def gen_qa_mpnet_embeddings(model, sentence_list):
     if len(sentence_list) > 0:
-        return model.encode(sentence_list, show_progress_bar = False, convert_to_tensor = True)
+        # return model.encode(sentence_list, show_progress_bar = False, convert_to_tensor = True)
+        if len(sentence_list) == 1:
+            return model.encode(sentence_list, show_progress_bar = False, convert_to_tensor = True)
+        else:
+            output = []
+            for sent in sentence_list:
+                print(f'gen_qa_mpnet_embeddings : {sent}')
+                output_tensor = model.encode(sent, show_progress_bar = False, convert_to_tensor = True)
+                output.append(output_tensor)
+            result = torch.Tensor(torch.stack(output, dim=1))
+            return result
     return 'Unable to convert to embedding'
 
 
-def call_qa_mpnet(model, quest, svo_df, question_embedding, sentence_embeddings ):
+def call_qa_mpnet(model, quest, svo_df, question_embedding, sentence_embeddings, question_svo_df ):
     print(f'Calling qa base mpnet model ---->')
     answer_facts = []
     answer_index = []
@@ -299,16 +312,32 @@ def call_qa_mpnet(model, quest, svo_df, question_embedding, sentence_embeddings 
     filter_answers_df = filter_answers_df.astype({'confidence':'float','output_str': 'str','output_sent':'str'})
     n = 1
     # for output in dot_score_output:
-    print(f'semantic_search_output: {len(semantic_search_output)}')
+    # print(f'semantic_search_output: {len(semantic_search_output)}')
     for output in semantic_search_output:
         confidence, output_str = float(output.split('\t')[1].strip()),output.split('\t')[2]
         answers_df.loc[len(answers_df)] = [confidence, output_str, output]
-    print(f'len(answers_df) --> {len(answers_df)}')
+    # print(f'len(answers_df) --> {len(answers_df)}')
+    new_filtered_answers = pd.DataFrame(columns=['confidence','output_str', 'output_sent']) 
+    print(f'question_svo_df --> {question_svo_df}')
+    if len(question_svo_df) == 0:
+        question_nouns = [w for (w, pos) in TextBlob(str(quest)).pos_tags if pos[0] == 'N']
+    else:
+        question_nouns = [w for (w, pos) in TextBlob(str(question_svo_df.head(2)['sentence'].values[0])).pos_tags if pos[0] == 'N']
+    print(question_svo_df.head(2)['sentence'].values)
+    print(f'question_nouns --> {question_nouns}')
+    for index, row in answers_df.iterrows():
+        if any(word in row['output_str'] for word in question_nouns):
+            new_filtered_answers.loc[len(new_filtered_answers)] = row
+    print(f'len(new_filtered_answers) --> {len(new_filtered_answers)}')
+    if len(new_filtered_answers) > 0:
+        answers_df = new_filtered_answers.copy()
+        del new_filtered_answers
     if len(answers_df) > 0 :
-        answers_df = answers_df.sort_values(by=['confidence'], ascending=False)
-        filter_answers_df = answers_df[answers_df.confidence >= config.QA_BASE_MPNET_MODEL_CONF]
+        answers_df = answers_df.sort_values(by=['confidence'], ascending=False).reset_index()
+        filter_answers_df = answers_df[answers_df.confidence  >= config.QA_BASE_MPNET_MODEL_CONF]
     print(f'len(filter_answers_df) --> {len(filter_answers_df)}')
     if len(filter_answers_df) == 0:
+        print(answers_df)
         print(f'if = 0 len(filter_answers_df) --> {len(filter_answers_df)}')
         print(f'len(answers_df) --> {len(answers_df)}')
         for index, row in answers_df.iterrows():
@@ -316,12 +345,21 @@ def call_qa_mpnet(model, quest, svo_df, question_embedding, sentence_embeddings 
                 answer_facts.append(f'[score:{row.confidence}] - {row.output_str}')
                 answer_index.append(query.get_detailed_answer_index(row.output_str, svo_df))
                 n += 1
+        if len(answer_facts) != 0:
+            return answer_facts, question_lemma, question_pos, answer_index 
+        else:
+            for index, row in answers_df.iterrows():
+                answer_facts.append(f'[score:{row.confidence}] - {row.output_str}')
+                answer_index.append(query.get_detailed_answer_index(row.output_str, svo_df))
+                n += 1
+            return answer_facts, question_lemma, question_pos, answer_index 
     elif len(filter_answers_df) > 3:
         print(f'if > 3len(filter_answers_df) --> {len(filter_answers_df)}')
         for index, row in filter_answers_df.iterrows():
             answer_facts.append(f'[score:{row.confidence}] - {row.output_str}')
             answer_index.append(query.get_detailed_answer_index(row.output_str, svo_df))
             n += 1
+        return answer_facts, question_lemma, question_pos, answer_index 
     else:
         print(f'else len(filter_answers_df) --> {len(filter_answers_df)}')
         for index, row in filter_answers_df.iterrows():

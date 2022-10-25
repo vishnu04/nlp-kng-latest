@@ -122,7 +122,7 @@ def generate_lemma(words_list, nlp):
     return lemma_list, pos_list
 
 @config.timer
-def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedding, sentence_embeddings,check_cause = True):
+def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedding, sentence_embeddings,question_svo_df,check_cause = True):
     question_doc = nlp(quest)
     question_lemma=[]
     question_pos = []
@@ -183,7 +183,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                                     answer_index.pop()
                                     pass
                                 else:
-                                    danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]])
+                                    danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]], question_svo_df)
                                     answer_facts.append(f'{n}. {danswer_facts[0]}')
                                     n += 1
                             else:
@@ -198,7 +198,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                                     answer_index.pop()
                                     pass
                                 else:
-                                    danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]])
+                                    danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]], question_svo_df)
                                     answer_facts.append(f'{n}. {danswer_facts[0]}')
                                     n += 1
                             else:
@@ -209,7 +209,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
             return answer_facts, question_lemma, question_pos, answer_index
     else:
         print(f'Calling else in detailed answer')
-        danswer_facts, question_lemma, question_pos, answer_index = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df,question_embedding, sentence_embeddings)
+        danswer_facts, question_lemma, question_pos, answer_index = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df,question_embedding, sentence_embeddings, question_svo_df)
         n = 1
         for answer in danswer_facts:
             if answer.strip()[-1] == '?':
@@ -229,6 +229,6 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
             answer_index.pop()
             pass
         else:
-            danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]])
+            danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]],question_svo_df)
             answer_facts.append(f'{n}. {danswer_facts[0]}')
     return answer_facts, question_lemma, question_pos, answer_index
