@@ -1,4 +1,3 @@
----
 name: build and Push Python Flask nlp-kng latest image to Google Cloud Platform
 on:
   push:
