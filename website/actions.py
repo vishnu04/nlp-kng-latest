@@ -19,6 +19,8 @@ import numpy as np
 '''
 Code to save nlp vocab to tmp folder.
 '''
+plt.switch_backend('Agg') 
+
 def save_nlp_to_disk(text_doc):
     try:
         tmpdir = create_temp_dir.createTempDir()
