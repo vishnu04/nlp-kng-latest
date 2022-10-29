@@ -116,6 +116,19 @@ neuralcoref/
 .ipynb_checkpoints/
 .csv
 .ipynb
+app.wsgi
+new_env_start.sh
+Pipfile
+Pipfile.lock
+rough_nlp_text.txt
+test.py
+*.pyc
+stanford-corenlp-4.5.1/
+website/models/gensim_text8_model.*
+website/__pycache__/*
+website/nlp_kng/__pycache__/*
+!tmp/test.py
+!website/models/models_test.py
 
 
 # Spyder project settings

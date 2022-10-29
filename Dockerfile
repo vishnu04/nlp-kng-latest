@@ -6,7 +6,7 @@ ARG PY_VER=3.9
 FROM ubuntu:${UBUNTU_VER}
 
 # System packages 
-RUN apt-get update && apt-get install -yq curl wget jq vim
+RUN apt-get update && apt-get install -yq curl wget jq vim zip unzip
 RUN apt-get install -y software-properties-common
 RUN apt install -y gpg-agent
 RUN apt install -y default-jre
@@ -40,6 +40,10 @@ EXPOSE 5000
 
 WORKDIR /usr/src/nlp-kng
 
+RUN wget https://nlp.stanford.edu/software/stanford-corenlp-4.5.1.zip
+RUN unzip stanford-corenlp-4.5.1.zip
+RUN rm -r stanford-corenlp-4.5.1.zip
+
 COPY ./requirements.txt ./requirements.txt
 COPY . .
 
@@ -57,6 +61,7 @@ RUN pip3 install -r requirements.txt
 # RUN python -c "import stanza; from stanza.server import CoreNLPClient; import os; from website.actions import config; os.environ['CORENLP_HOME'] = '/usr/bin/nlp-kng/stanza_nlp'; stanza.download('en')"
 
 # RUN echo "java -mx4g -cp '/usr/src/nlp-kng/stanford-corenlp-4.5.1/*' edu.stanford.nlp.pipeline.StanfordCoreNLPServer -preload tokenize,pos,depparse -status_port 9001 -port 9001 -timeout 300000" >> ~/.bashrc
+
 ENV CLASSPATH=/usr/src/nlp-kng/stanford-corenlp-4.5.1/stanford-corenlp-4.5.1-models.jar:/usr/src/nlp-kng/stanford-corenlp-4.5.1/stanford-corenlp-4.5.1.jar
 ENV PATH=/usr/src/nlp-kng/stanford-corenlp-4.5.1:${PATH}
 ENV CORENLP_DIR=/usr/src/nlp-kng/stanford-corenlp-4.5.1
@@ -75,3 +80,4 @@ RUN chmod 777 starter.sh
 # CMD ["python app.py"]
 # CMD ./starter.sh
 ENTRYPOINT ["/bin/bash"]
+CMD ["starter.sh"]
