@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  nlp-kng:  
+    image: ubuntu/nlp-kng
+    container_name: nlp-kng
+    platform: linux/x86_64
+
+    build:
+      context: .
+    ports:
+      - 5001:5001
+    volumes:
+      - .:/usr/src/nlp-kng
+    entrypoint: ["python", "-m", "app"] 
+
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 26677
+        hard: 46677
