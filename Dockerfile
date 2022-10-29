@@ -30,13 +30,13 @@ RUN conda install -c anaconda -y python=${PY_VER}
 
 RUN pip3 install --upgrade pip setuptools wheel
 
-ENV PORT 5000
+ENV PORT 5001
 ENV HOST 0.0.0.0
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONFAULTHANDLER 1
 ENV PYTHONMALLOC debug
 
-EXPOSE 5000
+EXPOSE 5001
 
 WORKDIR /usr/src/nlp-kng
 
