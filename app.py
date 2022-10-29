@@ -1,6 +1,5 @@
 from website import create_app
 import os
-
 from website.nlp_kng import config
 
 os.environ["CORENLP_HOME"] = config.CORENLP_DIR
