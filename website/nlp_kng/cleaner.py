@@ -7,9 +7,11 @@ from . import config
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('averaged_perceptron_tagger')
+    nltk.data.find('stopwords')
 except LookupError:
     nltk.download('punkt')
     nltk.download('averaged_perceptron_tagger')
+    nltk.download('stopwords')
 
 # def text_split(text):
 #     if len(text) > 0 :
