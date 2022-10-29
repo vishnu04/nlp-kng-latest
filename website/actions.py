@@ -65,8 +65,12 @@ def scrape():
             try:
                 text = scrapper.scrape_text(web_url)
                 text_df,text = cleaner.clean_data(text)
+                print(f'length of text scraped:{len(text)}')
                 if len(text) > 1:
-                    print(f'length of text scraped:{len(text)}')
+                    return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
+                else:
+                    flash('URL entered cannot be scraped !. Please enter the text from the weburl entered.', category='error')
+                    text = 'NA'
                     return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
             except:
                 flash('URL entered cannot be scraped !. Please enter correct URL. e.g: https://textacy.readthedocs.io/', category='error')
@@ -180,20 +184,29 @@ def queryQuestion():
         
         print(create_temp_dir.get_temp_dir())
         ## Loading NLP
-        if request.form.get('tmpdir') is None or request.form.get('tmpdir') == "None" \
-            or request.form.get('tmpdir') == "":
-            if create_temp_dir.get_temp_dir() is None or create_temp_dir.get_temp_dir() == "None" \
-                or create_temp_dir.get_temp_dir() == "":
-                text_doc = nlp(text)
-                save_nlp_to_disk(text_doc)
+        try:
+            if request.form.get('tmpdir') is None or request.form.get('tmpdir') == "None" \
+                or request.form.get('tmpdir') == "":
+                if create_temp_dir.get_temp_dir() is None or create_temp_dir.get_temp_dir() == "None" \
+                    or create_temp_dir.get_temp_dir() == "":
+                    text_doc = nlp(text)
+                    save_nlp_to_disk(text_doc)
+                else:
+                    text_doc = Doc(nlp.vocab).from_disk(create_temp_dir.get_temp_dir()+'/spacy_nlp.nlp')
             else:
-                text_doc = Doc(nlp.vocab).from_disk(create_temp_dir.get_temp_dir()+'/spacy_nlp.nlp')
-        else:
-            text_doc = Doc(nlp.vocab).from_disk(request.form.get('tmpdir')+'/spacy_nlp.nlp')
+                text_doc = Doc(nlp.vocab).from_disk(request.form.get('tmpdir')+'/spacy_nlp.nlp')
+        except Exception as e:
+            print(f'Exception reading spacy nlp: {e}')
+            text_doc = nlp(text)
+            save_nlp_to_disk(text_doc)
 
-
-        svo_df = pd.read_json(session.get('svo_df'), dtype=False)
-
+        try:
+            svo_df = pd.read_json(session.get('svo_df'), dtype=False)
+        except Exception as e:
+            print(f'Error svo_df actions - {e}')
+            svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+            svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
+            
         print(f'Reading sentence embeddings from numpy and converting to torch')
         sentence_embeddings = torch.from_numpy(np.fromstring(session['sentence_embeddings'], dtype = np.float32).reshape(len(svo_df),768))
 
