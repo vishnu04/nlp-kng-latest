@@ -200,15 +200,33 @@ def queryQuestion():
             text_doc = nlp(text)
             save_nlp_to_disk(text_doc)
 
+        new_sentence_embeddings = None
+        sentence_embeddings = None
         try:
             svo_df = pd.read_json(session.get('svo_df'), dtype=False)
         except Exception as e:
             print(f'Error svo_df actions - {e}')
             svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
             svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
+            new_sentence_embeddings = sentence_embeddings
+
+        try:
+            print(f'Reading sentence embeddings from numpy and converting to torch')
+            old_sentence_embeddings = torch.from_numpy(np.fromstring(session['sentence_embeddings'], dtype = np.float32).reshape(len(svo_df),768))
+            sentence_embeddings = old_sentence_embeddings
+            del old_sentence_embeddings
+        except Exception as e:
+            print(f'Error while retrieving the sentence embeddings from numpy: {e}')
+            try:
+                if new_sentence_embeddings is not None:
+                    sentence_embeddings = new_sentence_embeddings
+                    del new_sentence_embeddings
+            except Exception as e:
+                print(f'Error while assigning new_sentence_embeddings: {e}')
+                svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+                svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
+        
             
-        print(f'Reading sentence embeddings from numpy and converting to torch')
-        sentence_embeddings = torch.from_numpy(np.fromstring(session['sentence_embeddings'], dtype = np.float32).reshape(len(svo_df),768))
 
         headings = svo_df.columns[0:3]
         data_tuple = []
