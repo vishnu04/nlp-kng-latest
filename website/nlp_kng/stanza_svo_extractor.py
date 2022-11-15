@@ -69,9 +69,9 @@ def triplet_extraction (text_doc, nlp, model, text, output=['parse_tree','spo','
                 # print(objects)
                 pass
             if 'result' in output:
-                # print('---Result---')
+                print('---Result---')
                 change_obj_sub, reason_flag = change_subject_object(input_sent, subject[0], predicate[0],objects[0]) 
-                # print(subject[0],predicate[0],objects[0],input_sent)  
+                print(change_obj_sub, subject[0],predicate[0],objects[0],input_sent)  
                 if change_obj_sub:
                     if len(objects[0].strip()) !=0 and len(predicate[0].strip()) != 0 and len(subject[0].strip()) != 0:
                         svo_df.loc[len(svo_df)] = [objects[0],predicate[0],subject[0], input_sent, reason_flag]
@@ -108,7 +108,8 @@ def change_subject_object (sentence, subj, verb, obj):
     word_list = re.findall(r'\w+', sentence)
     reason_list = ['by','due','results', 'effects of', 'effect of', 
                 'affects of', 'affect of', 'due to', 'impacts of',
-                'impact of', 'is caused due','caused by'
+                'impact of', 'is caused due','caused by', 
+                'is caused by', 'was caused by'
                 # 'reason for', 'reasons for',
                 ]
     # syn_reason_list = synonyms_extractor.get_verb_synonyms(reason_list)

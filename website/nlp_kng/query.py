@@ -8,6 +8,7 @@ from . import svo_extractor
 import re
 from . import stanza_svo_extractor
 from . import models
+from . import graph_traverse
 
 def peek(iterable):
     try:
@@ -33,7 +34,7 @@ def get_detailed_answer_index(detailed_answer, svo_df):
     return -1
 
 @config.timer
-def short_answer_question(quest,spacy_doc,nlp, svo_df,detailed_answer_index, check_cause = True):
+def short_answer_question(quest,spacy_doc,nlp, svo_df,detailed_answer_index,danswers_df, G, pos, edge_labels, check_cause = True):
     question_doc = nlp(quest.lower())
     question_lemma=[]
     question_pos = []
@@ -101,9 +102,101 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df,detailed_answer_index, che
                 return answer_facts, question_lemma, question_pos
         return unique_statements, question_lemma, question_pos
     else: ## if detailed answer is not None
+        
+        for i, q_ngrams in enumerate(list(textacy.extract.ngrams(question_doc,1))):
+            question_lemma.append(' '.join([listitem.lemma_ for listitem in q_ngrams]))
+            question_pos.append(' '.join([listitem.pos_ for listitem in q_ngrams]))
+            question_lemma.append(' '.join([listitem.text for listitem in q_ngrams]))
+            question_pos.append(' '.join([listitem.pos_ for listitem in q_ngrams]))
+            question_lemma.append(' '.join([listitem.text for listitem in q_ngrams]))
+            question_pos.append(' '.join([tok.pos_ for tok in nlp(str(q_ngrams))]))
+            
+        '''Code to extract semistructed statements from SVO triplets'''
+        unique_statements =set()
+        question_nouns = []
+        question_verbs = []
+        answers_df = pd.DataFrame(columns = ['subject','verb','object'])
+        for i, pos in enumerate(question_pos):
+            print(i,pos)
+            if pos in ['NOUN','PROPN']:
+                question_nouns.append(question_lemma[i])
+            if pos in ['VERB','ROOT']:
+                question_verbs.append(question_lemma[i])
+        print(f'short_answer question verbs:{question_verbs}')
+        print(f'short_answer question nouns:{question_nouns}')
+        if len(question_verbs) == 0:
+            question_verbs = question_nouns.copy()
+        print(f'short_answer question verbs:{question_verbs}')
+        print(f'short_answer question nouns:{question_nouns}')
+        question_verbs = synonyms_extractor.get_synonyms(question_verbs,svo_df)
+        question_verbs, question_verbs_pos = generate_lemma(question_verbs,nlp)
+
+
+
+
+        n = 1
+        # print(f'svo_df --> {svo_df}')
+        # print(f' danswers_df --> {danswers_df}')
+        # print(f'detailed_answer_index --> {detailed_answer_index}')
+        networkx_answers = []
+        danswers_df_index_count = 0
         for answer_index in detailed_answer_index:
+            # print(f'answer_index ---> {answer_index}')
+            # danswers_row = danswers_df[danswers_df['index'] == answer_index]
+            danswers_row = danswers_df.iloc[danswers_df_index_count]
+            # row = svo_df[svo_df['sentence'] == danswers_row['output_str'].to_string(index=False)]
             row = svo_df.iloc[answer_index]
-            answer_facts.append(row.subject+' '+row.verb+' '+row.object)
+            # print(row)
+            # print(danswers_row)
+            # score = danswers_row['confidence'].to_string(index=False)
+            score = danswers_row['confidence']
+            print(score)
+            row_output = row.subject+' '+row.verb+' '+row.object
+            answer_facts.append(f'{n}. [score:{score}] - {row_output}')
+            # networkx_answers.append(graph_traverse.graph_traverse(G,edge_labels,row.subject,row.object, row.verb, svo_df))
+            n += 1
+            danswers_df_index_count += 1
+        if len(networkx_answers) == 0:
+            print('quest', quest)
+            qsubjects = []
+            qobjects = []
+            qverbs = []
+            for tok in nlp(quest):
+                if tok.pos_ in ['PRON','NOUN','JJ']:
+                    qsubjects.append(tok)
+                if tok.pos_ in ['VERB']:
+                    qverbs.append(tok)
+            
+            qsubjects = list(set(qsubjects))
+            qverbs = list(set(qverbs))
+            if len(qsubjects) == 1:
+                for qsubject in qsubjects:
+                    if len(qverbs) == 0:
+                        qverbs.append(None)
+                    for qverb in qverbs:
+                        networkx_answers.append(graph_traverse.graph_traverse(G,edge_labels,qsubject,None,qverb,svo_df))
+                        networkx_answers.append(graph_traverse.graph_traverse(G,edge_labels,None,qsubject,qverb,svo_df))
+            else:
+                for qsubject in qsubjects:
+                    for qobject in qsubjects:
+                        if len(qverbs) == 0:
+                            qverbs.append(None)
+                        if str(qsubject) in str(qobject) and str(qobject) in str(qsubject):
+                            pass
+                        else:
+                            for qverb in qverbs:
+                                networkx_answers.append(graph_traverse.graph_traverse(G,edge_labels,qsubject,qobject,qverb,svo_df))
+                                networkx_answers.append(graph_traverse.graph_traverse(G,edge_labels,qsubject,qobject,qverb,svo_df))
+        if len(networkx_answers) > 0:
+            answer_facts.append(f' ')
+            answer_facts.append(f'GraphTraverse Answers ====> ')
+            n = 1
+            new_networkx_answers = []
+            for nx_answer in networkx_answers:
+                if len(nx_answer) > 0 and nx_answer not in new_networkx_answers:
+                    answer_facts.append(f'{n}. {nx_answer}')
+                    n += 1
+                    new_networkx_answers.append(nx_answer)
         return answer_facts, question_lemma, question_pos
     
     
@@ -183,7 +276,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                                     answer_index.pop()
                                     pass
                                 else:
-                                    danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]], question_svo_df)
+                                    danswer_facts, question_lemma, question_pos, danswer_index , danswers_df = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]], question_svo_df)
                                     answer_facts.append(f'{n}. {danswer_facts[0]}')
                                     n += 1
                             else:
@@ -198,7 +291,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                                     answer_index.pop()
                                     pass
                                 else:
-                                    danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]], question_svo_df)
+                                    danswer_facts, question_lemma, question_pos, danswer_index, danswers_df = models.call_qa_mpnet(qa_mpnet_base_model,quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]], question_svo_df)
                                     answer_facts.append(f'{n}. {danswer_facts[0]}')
                                     n += 1
                             else:
@@ -206,10 +299,10 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                         else:
                             pass
         if len(answer_facts) > 0:
-            return answer_facts, question_lemma, question_pos, answer_index
+            return answer_facts, question_lemma, question_pos, answer_index, danswers_df
     else:
         print(f'Calling else in detailed answer')
-        danswer_facts, question_lemma, question_pos, answer_index = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df,question_embedding, sentence_embeddings, question_svo_df)
+        danswer_facts, question_lemma, question_pos, answer_index, danswers_df = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df,question_embedding, sentence_embeddings, question_svo_df)
         n = 1
         for answer in danswer_facts:
             if answer.strip()[-1] == '?':
@@ -217,7 +310,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
             else:
                 answer_facts.append(f'{n}. {answer}')
                 n +=1 
-        return answer_facts, question_lemma, question_pos, answer_index
+        return answer_facts, question_lemma, question_pos, answer_index,danswers_df
     print('Query detailed answer-- Returning unique_statements')
     answer_facts = []
     answer_index = []
@@ -229,6 +322,6 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
             answer_index.pop()
             pass
         else:
-            danswer_facts, question_lemma, question_pos, danswer_index = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]],question_svo_df)
+            danswer_facts, question_lemma, question_pos, danswer_index, danswers_df = models.call_qa_mpnet(qa_mpnet_base_model, quest, svo_df.filter(items = [answer_index[-1]], axis = 0), question_embedding, sentence_embeddings[answer_index[-1]],question_svo_df)
             answer_facts.append(f'{n}. {danswer_facts[0]}')
-    return answer_facts, question_lemma, question_pos, answer_index
+    return answer_facts, question_lemma, question_pos, answer_index, danswers_df
