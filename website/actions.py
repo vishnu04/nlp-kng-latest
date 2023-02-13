@@ -1,6 +1,5 @@
 from venv import create
 from flask import Blueprint, render_template, request, flash, redirect, url_for, send_file, session
-# from matplotlib.widgets import EllipseSelector
 from .nlp_kng import scrapper, cleaner, svo_extractor, kg_generator, query, config, create_temp_dir, cleantmp, stanza_svo_extractor, models
 import spacy
 from io import BytesIO
@@ -65,8 +64,12 @@ def scrape():
             try:
                 text = scrapper.scrape_text(web_url)
                 text_df,text = cleaner.clean_data(text)
+                print(f'length of text scraped:{len(text)}')
                 if len(text) > 1:
-                    print(f'length of text scraped:{len(text)}')
+                    return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
+                else:
+                    flash('URL entered cannot be scraped !. Please enter the text from the weburl entered.', category='error')
+                    text = 'NA'
                     return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
             except:
                 flash('URL entered cannot be scraped !. Please enter correct URL. e.g: https://textacy.readthedocs.io/', category='error')
@@ -95,10 +98,11 @@ def extract():
         n_word_tokens = len(word_tokenize(text))
 
         svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+        print(f' Len of svo_df --> {len(svo_df)}')
         svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
         print(f'n_word_tokens : {n_word_tokens}')
-        # if len(svo_df) > 0:
-        #     svo_df.to_csv('svo_df.csv', index = True)
+        if len(svo_df) > 0:
+            svo_df.to_csv('svo_df.csv', index = True)
 
         ## Saving NLP
         tmpdir = save_nlp_to_disk(text_doc)
@@ -124,7 +128,10 @@ def extract():
 
             figfile.seek(0)
             figdata_png = base64.b64encode(figfile.getvalue()).decode('ascii')
-                        
+            
+            session['networkxGraph'] = G
+            session['networkxGraphPos'] = pos
+            session['networkxGraph_labels'] = edge_labels
             session['image_base64'] = figdata_png
             session['svo_df'] = svo_df.to_json(default_handler=str)
 
@@ -178,24 +185,59 @@ def queryQuestion():
         headings = request.form.get('headings')
         data_tuple = request.form.get('data')
         
+        G = session.get('networkxGraph')
+        pos = session.get('networkxGraphPos')
+        edge_labels = session.get('networkxGraph_labels')
+        # session['networkxGraph'] = G
+        # session['networkxGraphPos'] = pos
+        # session['networkxGraph_labels'] = edge_labels
+
+
         print(create_temp_dir.get_temp_dir())
         ## Loading NLP
-        if request.form.get('tmpdir') is None or request.form.get('tmpdir') == "None" \
-            or request.form.get('tmpdir') == "":
-            if create_temp_dir.get_temp_dir() is None or create_temp_dir.get_temp_dir() == "None" \
-                or create_temp_dir.get_temp_dir() == "":
-                text_doc = nlp(text)
-                save_nlp_to_disk(text_doc)
+        try:
+            if request.form.get('tmpdir') is None or request.form.get('tmpdir') == "None" \
+                or request.form.get('tmpdir') == "":
+                if create_temp_dir.get_temp_dir() is None or create_temp_dir.get_temp_dir() == "None" \
+                    or create_temp_dir.get_temp_dir() == "":
+                    text_doc = nlp(text)
+                    save_nlp_to_disk(text_doc)
+                else:
+                    text_doc = Doc(nlp.vocab).from_disk(create_temp_dir.get_temp_dir()+'/spacy_nlp.nlp')
             else:
-                text_doc = Doc(nlp.vocab).from_disk(create_temp_dir.get_temp_dir()+'/spacy_nlp.nlp')
-        else:
-            text_doc = Doc(nlp.vocab).from_disk(request.form.get('tmpdir')+'/spacy_nlp.nlp')
+                text_doc = Doc(nlp.vocab).from_disk(request.form.get('tmpdir')+'/spacy_nlp.nlp')
+        except Exception as e:
+            print(f'Exception reading spacy nlp: {e}')
+            text_doc = nlp(text)
+            save_nlp_to_disk(text_doc)
 
+        new_sentence_embeddings = None
+        sentence_embeddings = None
+        try:
+            svo_df = pd.read_json(session.get('svo_df'), dtype=False)
+        except Exception as e:
+            print(f'Error svo_df actions - {e}')
+            svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+            svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
+            new_sentence_embeddings = sentence_embeddings
 
-        svo_df = pd.read_json(session.get('svo_df'), dtype=False)
-
-        print(f'Reading sentence embeddings from numpy and converting to torch')
-        sentence_embeddings = torch.from_numpy(np.fromstring(session['sentence_embeddings'], dtype = np.float32).reshape(len(svo_df),768))
+        try:
+            print(f'Reading sentence embeddings from numpy and converting to torch')
+            old_sentence_embeddings = torch.from_numpy(np.fromstring(session['sentence_embeddings'], dtype = np.float32).reshape(len(svo_df),768))
+            sentence_embeddings = old_sentence_embeddings
+            del old_sentence_embeddings
+        except Exception as e:
+            print(f'Error while retrieving the sentence embeddings from numpy: {e}')
+            try:
+                if new_sentence_embeddings is not None:
+                    sentence_embeddings = new_sentence_embeddings
+                    del new_sentence_embeddings
+            except Exception as e:
+                print(f'Error while assigning new_sentence_embeddings: {e}')
+                svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+                svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
+        
+            
 
         headings = svo_df.columns[0:3]
         data_tuple = []
@@ -211,7 +253,9 @@ def queryQuestion():
         detailed_answers = ''
         question_svo_df, check_cause, question_embedding = stanza_svo_extractor.triplet_extraction('',nlp,qa_mpnet_base_model, question, output = ['result'])
         print('question_svo_df --> ', question_svo_df)
-        danswer, question_lemma_, question_pos_, danswer_index = query.detailed_answer_question(qa_mpnet_base_model,question,text_doc, nlp, svo_df, question_embedding, sentence_embeddings, question_svo_df, check_cause)
+        danswer, question_lemma_, question_pos_, danswer_index,danswers_df = query.detailed_answer_question(qa_mpnet_base_model,question,text_doc, nlp, svo_df, question_embedding, sentence_embeddings, question_svo_df, check_cause)
+        print(f'danswer_index --> {danswer_index}')
+        # print(f'danswers_df --> {type(danswers_df)}')
         detailed_answers_found = False
         detailed_answer_length = 0
         if len(danswer) > 0:
@@ -223,8 +267,8 @@ def queryQuestion():
                 else:
                     detailed_answers +=  ans + '\n'
                     detailed_answer_length += 2
-        # answer, question_lemma_, question_pos_ = query.short_answer_question(question,text_doc, nlp, svo_df,danswer_index,check_cause)
-        answer, question_lemma_, question_pos_ = [],[],[] #query.short_answer_question(question,text_doc, nlp, svo_df,danswer_index,check_cause)
+        answer, question_lemma_, question_pos_ = query.short_answer_question(question,text_doc, nlp, svo_df,danswer_index,danswers_df, G, pos, edge_labels, check_cause)
+        # answer, question_lemma_, question_pos_ = [],[],[] #query.short_answer_question(question,text_doc, nlp, svo_df,danswer_index,danswers_df,check_cause)
         short_answers_found = False
         short_answer_length = 0
         if len(answer) > 0:
