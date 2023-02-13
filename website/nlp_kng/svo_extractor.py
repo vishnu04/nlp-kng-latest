@@ -35,13 +35,13 @@ def svo(text_doc, text, nlp, model):
     sentences = []
     for lines in text.splitlines():
         sentences.append(nlp(lines))
-    print(f'Svo extract - len of sentences --> : {len(sentences)}')
+    # print(f'Svo extract - len of sentences --> : {len(sentences)}')
     qa_mpnet_base_model = model
     for sentence in sentences:
-        print(f'SVO extract --> {sentence}')
+        # print(f'SVO extract --> {sentence}')
         sentence_tuples = []
         sentence_tuples = extract_SVO(sentence)
-        print(f'len(sentence_tuples) --> {sentence_tuples[0]}')
+        # print(f'len(sentence_tuples) --> {sentence_tuples[0]}')
         stanza_svo_df = pd.DataFrame(columns = config.SUB_VERB_OBJ_DF_COLS)
         if len(sentence_tuples[0]) == 0:
             stanza_svo_df,reason_present, sentence_embeddings = stanza_svo_extractor.triplet_extraction(text_doc,nlp,model,str(sentence), output = ['result'])
@@ -50,9 +50,9 @@ def svo(text_doc, text, nlp, model):
                     # print(stanza_row)
                     # sentence_tuples.append([stanza_row.subject, stanza_row.verb, stanza_row.object])
                     sentence_tuples.append([SVOTriple(subject=[stanza_row.subject], verb=[stanza_row.verb], object=[stanza_row.object])])
-        print(f'sentence_tuples --> {sentence_tuples}')
+        # print(f'sentence_tuples --> {sentence_tuples}')
         for svoTriple in sentence_tuples:
-            print(svoTriple, len(svoTriple))
+            # print(svoTriple, len(svoTriple))
             if len(svoTriple) > 0 :
                 for s,v,o in svoTriple:
                     subj = ' '.join([str(n) for n in s])
@@ -67,7 +67,7 @@ def svo(text_doc, text, nlp, model):
                         svo_df.loc[len(svo_df)] = [subj,verb,obj, str(sentence), reason_flag]
     new_svo_df = pd.DataFrame(columns = config.SUB_VERB_OBJ_DF_COLS)
     for index, svo_tuple in svo_df.iterrows():
-        print(f'{svo_tuple} -- {[tok.pos_ for tok in nlp(svo_tuple.subject)]} {[tok.pos_ for tok in nlp(svo_tuple.object)]}')
+        # print(f'{svo_tuple} -- {[tok.pos_ for tok in nlp(svo_tuple.subject)]} {[tok.pos_ for tok in nlp(svo_tuple.object)]}')
         if set(["PROPN",'NOUN']) & set([tok.pos_ for tok in nlp(svo_tuple.subject)]):
             if(set(["PROPN",'NOUN']) & set([tok.pos_ for tok in nlp(svo_tuple.object)])):
                 # new_svo_df.loc[len(new_svo_df)] = [svo_tuple.subject,svo_tuple.verb, svo_tuple.object, svo_tuple.sentence, svo_tuple.reason_flag, svo_tuple.qa_base_mpnet_embeddings]

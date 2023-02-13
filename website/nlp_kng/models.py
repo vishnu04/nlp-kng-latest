@@ -110,8 +110,8 @@ def sim_gensim(question_list, response_list, glove_model = "glove-wiki-gigaword-
     # Create the term similarity matrix.  
     similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix, dictionary, tfidf)
     
-    print(similarity_matrix)
-    print(question_corpus)
+    # print(similarity_matrix)
+    # print(question_corpus)
     
     # Compute Soft Cosine Measure between the query and the documents.
     # From: https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb
@@ -126,7 +126,7 @@ def sim_gensim(question_list, response_list, glove_model = "glove-wiki-gigaword-
 
         # Output the sorted similarity scores and documents
         sorted_indexes = np.argsort(doc_similarity_scores)[::-1]
-        print(question_list[qidx],ques_corpus)
+        # print(question_list[qidx],ques_corpus)
         for idx in sorted_indexes:
             print(f'{idx} \t {doc_similarity_scores[idx]:0.3f} \t {response_list[idx]}')
 
@@ -255,7 +255,7 @@ def semantic_search(model, question_list, response_list, response_df):
                 sem_score = 1
             else:
                 sem_score = float(k['score'])*10
-            print(sem_score, float(k['score'])*10)
+            # print(sem_score, float(k['score'])*10)
             # search_result = "\t{:.3f}\t{}".format(float(k['score'])*10, response_df['sentence'][k['corpus_id']]) 
             search_result = "\t{:.3f}\t{}".format(sem_score, response_df['sentence'][k['corpus_id']]) 
             semantic_search_output.add(search_result)
@@ -267,11 +267,11 @@ def dot_score(model, question_list, response_list):
     dot_sims = util.dot_score(quest_embeddings, response_embeddings)
     dot_score_output = set()
     for qidx, sims in enumerate(dot_sims):
-        print(question_list[qidx])
+        # print(question_list[qidx])
         
         for sidx,k in enumerate(sims):
             dot_score_result = "\t{:.3f}\t{}".format(k.tolist(), response_list[sidx])
-            print(dot_score_result) 
+            # print(dot_score_result) 
             dot_score_output.add(dot_score_result)
     return dot_score_output
 
@@ -291,7 +291,7 @@ def gen_qa_mpnet_embeddings(model, sentence_list):
         else:
             output = []
             for sent in sentence_list:
-                print(f'gen_qa_mpnet_embeddings : {sent}')
+                # print(f'gen_qa_mpnet_embeddings : {sent}')
                 output_tensor = model.encode(sent, show_progress_bar = False, convert_to_tensor = True)
                 output.append(output_tensor)
             result = torch.Tensor(torch.stack(output, dim=1))
@@ -326,29 +326,29 @@ def call_qa_mpnet(model, quest, svo_df, question_embedding, sentence_embeddings,
         answers_df.loc[len(answers_df)] = [confidence, output_str, output]
     # print(f'len(answers_df) --> {len(answers_df)}')
     new_filtered_answers = pd.DataFrame(columns=['confidence','output_str', 'output_sent']) 
-    print(f'question_svo_df --> {question_svo_df}')
+    # print(f'question_svo_df --> {question_svo_df}')
     if len(question_svo_df) == 0:
         question_nouns = [w for (w, pos) in TextBlob(str(quest)).pos_tags if pos[0] in ('N','J')]
     else:
-        print(f"pos_tags of question --> {[(w,pos) for (w, pos) in TextBlob(str(question_svo_df.head(2)['sentence'].values[0])).pos_tags]}")
+        # print(f"pos_tags of question --> {[(w,pos) for (w, pos) in TextBlob(str(question_svo_df.head(2)['sentence'].values[0])).pos_tags]}")
         question_nouns = [w for (w, pos) in TextBlob(str(question_svo_df.head(2)['sentence'].values[0])).pos_tags if pos[0] in ('N','J')]
-    print(question_svo_df.head(2)['sentence'].values)
-    print(f'question_nouns --> {question_nouns}')
+    # print(question_svo_df.head(2)['sentence'].values)
+    # print(f'question_nouns --> {question_nouns}')
     for index, row in answers_df.iterrows():
         if any(word in row['output_str'] for word in question_nouns):
             new_filtered_answers.loc[len(new_filtered_answers)] = row
-    print(f'len(new_filtered_answers) --> {len(new_filtered_answers)}')
+    # print(f'len(new_filtered_answers) --> {len(new_filtered_answers)}')
     if len(new_filtered_answers) > 0:
         answers_df = new_filtered_answers.copy()
         del new_filtered_answers
     if len(answers_df) > 0 :
         answers_df = answers_df.sort_values(by=['confidence'], ascending=False).reset_index()
         filter_answers_df = answers_df[answers_df.confidence  >= config.QA_BASE_MPNET_MODEL_CONF]
-    print(f'len(filter_answers_df) --> {len(filter_answers_df)}')
+    # print(f'len(filter_answers_df) --> {len(filter_answers_df)}')
     if len(filter_answers_df) == 0:
         # print(answers_df)
-        print(f'if = 0 len(filter_answers_df) --> {len(filter_answers_df)}')
-        print(f'len(answers_df) --> {len(answers_df)}')
+        # print(f'if = 0 len(filter_answers_df) --> {len(filter_answers_df)}')
+        # print(f'len(answers_df) --> {len(answers_df)}')
         for index, row in answers_df.iterrows():
             if row.confidence >= 0.4:
                 answer_facts.append(f'[score:{row.confidence}] - {row.output_str}')
@@ -363,14 +363,14 @@ def call_qa_mpnet(model, quest, svo_df, question_embedding, sentence_embeddings,
                 n += 1
             return answer_facts, question_lemma, question_pos, answer_index ,answers_df
     elif len(filter_answers_df) > 3:
-        print(f'if > 3len(filter_answers_df) --> {len(filter_answers_df)}')
+        # print(f'if > 3len(filter_answers_df) --> {len(filter_answers_df)}')
         for index, row in filter_answers_df.iterrows():
             answer_facts.append(f'[score:{row.confidence}] - {row.output_str}')
             answer_index.append(query.get_detailed_answer_index(row.output_str, svo_df))
             n += 1
         return answer_facts, question_lemma, question_pos, answer_index ,filter_answers_df
     else:
-        print(f'else len(filter_answers_df) --> {len(filter_answers_df)}')
+        # print(f'else len(filter_answers_df) --> {len(filter_answers_df)}')
         for index, row in filter_answers_df.iterrows():
             answer_facts.append(f'[score:{row.confidence}] - {row.output_str}')
             answer_index.append(query.get_detailed_answer_index(row.output_str, svo_df))

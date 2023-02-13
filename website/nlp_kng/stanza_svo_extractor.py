@@ -40,7 +40,7 @@ def triplet_extraction (text_doc, nlp, model, text, output=['parse_tree','spo','
         sentences = []
         for lines in text.splitlines():
             sentences.append(nlp(lines))
-        print(f'Stanza Svo extract - len of sentences --> : {len(sentences)}')
+        # print(f'Stanza Svo extract - len of sentences --> : {len(sentences)}')
         # if text_doc != '':
         #     sentences = [sent for sent in text_doc.sents]
         # else:
@@ -71,7 +71,7 @@ def triplet_extraction (text_doc, nlp, model, text, output=['parse_tree','spo','
             if 'result' in output:
                 print('---Result---')
                 change_obj_sub, reason_flag = change_subject_object(input_sent, subject[0], predicate[0],objects[0]) 
-                print(change_obj_sub, subject[0],predicate[0],objects[0],input_sent)  
+                # print(change_obj_sub, subject[0],predicate[0],objects[0],input_sent)  
                 if change_obj_sub:
                     if len(objects[0].strip()) !=0 and len(predicate[0].strip()) != 0 and len(subject[0].strip()) != 0:
                         svo_df.loc[len(svo_df)] = [objects[0],predicate[0],subject[0], input_sent, reason_flag]
@@ -87,9 +87,9 @@ def triplet_extraction (text_doc, nlp, model, text, output=['parse_tree','spo','
         # print(f'Stanza_extract SVO')
         # print(svo_df.head(5))
         
-        print(f'triplet_extraction ---> {len(svo_df)}')
+        # print(f'triplet_extraction ---> {len(svo_df)}')
         if len(svo_df) > 0:
-            print(f'triplet_extraction ---> {len(svo_df)}')
+            # print(f'triplet_extraction ---> {len(svo_df)}')
             # print(f'triplet_extraction --->')
             # print(list(svo_df['sentence']))
             input_sent_embeddings = models.gen_qa_mpnet_embeddings(qa_mpnet_base_model, list(svo_df['sentence']))

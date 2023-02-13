@@ -54,27 +54,27 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df,detailed_answer_index,dans
         question_verbs = []
         answers_df = pd.DataFrame(columns = ['subject','verb','object'])
         for i, pos in enumerate(question_pos):
-            print(i,pos)
+            # print(i,pos)
             if pos in ['NOUN','PROPN']:
                 question_nouns.append(question_lemma[i])
             if pos in ['VERB','ROOT']:
                 question_verbs.append(question_lemma[i])
-        print(f'short_answer question verbs:{question_verbs}')
-        print(f'short_answer question nouns:{question_nouns}')
+        # print(f'short_answer question verbs:{question_verbs}')
+        # print(f'short_answer question nouns:{question_nouns}')
         if len(question_verbs) == 0:
             question_verbs = question_nouns.copy()
-        print(f'short_answer question verbs:{question_verbs}')
-        print(f'short_answer question nouns:{question_nouns}')
+        # print(f'short_answer question verbs:{question_verbs}')
+        # print(f'short_answer question nouns:{question_nouns}')
         question_verbs = synonyms_extractor.get_synonyms(question_verbs,svo_df)
         question_verbs, question_verbs_pos = generate_lemma(question_verbs,nlp)
         for noun in question_nouns:
             for verb in question_verbs:
                 if noun != verb:
                     if check_cause:
-                        print(f'short answer - checking object --> noun:{noun}\tverb:{verb}')
+                        # print(f'short answer - checking object --> noun:{noun}\tverb:{verb}')
                         sv = svo_df.loc[(svo_df['object'].str.contains(noun) & svo_df['verb'].str.contains(verb)) & svo_df['reason_flag'] == True]
                     else:
-                        print(f'short answer - checking subject --> noun:{noun}\tverb:{verb}')
+                        # print(f'short answer - checking subject --> noun:{noun}\tverb:{verb}')
                         sv = svo_df.loc[(svo_df['subject'].str.contains(noun) & svo_df['verb'].str.contains(verb)) & svo_df['reason_flag'] == True] 
                         sv = svo_df.loc[(svo_df['object'].str.contains(noun) & svo_df['verb'].str.contains(verb)) & svo_df['reason_flag'] == True] 
                     for index, svo in sv.iterrows():
@@ -117,17 +117,17 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df,detailed_answer_index,dans
         question_verbs = []
         answers_df = pd.DataFrame(columns = ['subject','verb','object'])
         for i, pos in enumerate(question_pos):
-            print(i,pos)
+            # print(i,pos)
             if pos in ['NOUN','PROPN']:
                 question_nouns.append(question_lemma[i])
             if pos in ['VERB','ROOT']:
                 question_verbs.append(question_lemma[i])
-        print(f'short_answer question verbs:{question_verbs}')
-        print(f'short_answer question nouns:{question_nouns}')
+        # print(f'short_answer question verbs:{question_verbs}')
+        # print(f'short_answer question nouns:{question_nouns}')
         if len(question_verbs) == 0:
             question_verbs = question_nouns.copy()
-        print(f'short_answer question verbs:{question_verbs}')
-        print(f'short_answer question nouns:{question_nouns}')
+        # print(f'short_answer question verbs:{question_verbs}')
+        # print(f'short_answer question nouns:{question_nouns}')
         question_verbs = synonyms_extractor.get_synonyms(question_verbs,svo_df)
         question_verbs, question_verbs_pos = generate_lemma(question_verbs,nlp)
 
@@ -150,14 +150,14 @@ def short_answer_question(quest,spacy_doc,nlp, svo_df,detailed_answer_index,dans
             # print(danswers_row)
             # score = danswers_row['confidence'].to_string(index=False)
             score = danswers_row['confidence']
-            print(score)
+            # print(score)
             row_output = row.subject+' '+row.verb+' '+row.object
             answer_facts.append(f'{n}. [score:{score}] - {row_output}')
             # networkx_answers.append(graph_traverse.graph_traverse(G,edge_labels,row.subject,row.object, row.verb, svo_df))
             n += 1
             danswers_df_index_count += 1
         if len(networkx_answers) == 0:
-            print('quest', quest)
+            # print('quest', quest)
             qsubjects = []
             qobjects = []
             qverbs = []
@@ -262,14 +262,14 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
         no_of_facts = len(unique_statements)
         n = 1
         for statement in unique_statements:
-                print(f'Detailed Answer --> statement --> {statement}')
+                # print(f'Detailed Answer --> statement --> {statement}')
                 entity, cue, fact = statement
                 if len(fact) > 0:
                     if str(entity).lower() != str(cue).lower():
                         sentence = str(entity)+' '+ str(cue)+ ' '+ str(fact)
                         if check_cause:
                             check_flag, reason_flag = stanza_svo_extractor.change_subject_object (sentence, str(entity), str(cue), str(fact))
-                            print(f'check_cause:{check_cause}, reason_flag:{reason_flag}, sentence: {sentence}')
+                            # print(f'check_cause:{check_cause}, reason_flag:{reason_flag}, sentence: {sentence}')
                             if reason_flag is False:
                                 answer_index.append(get_detailed_answer_index(str(entity)+' '+str(cue)+' '+str(fact), svo_df))
                                 if answer_index[-1] == -1:
@@ -284,7 +284,7 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                                 # n += 1
                         elif check_cause == False:
                             check_flag, reason_flag = stanza_svo_extractor.change_subject_object (sentence, str(entity), str(cue), str(fact))
-                            print(f'check_cause:{check_cause}, reason_flag:{reason_flag}, sentence: {sentence}')
+                            # print(f'check_cause:{check_cause}, reason_flag:{reason_flag}, sentence: {sentence}')
                             if reason_flag:
                                 answer_index.append(get_detailed_answer_index(str(entity)+' '+str(cue)+' '+str(fact), svo_df))
                                 if answer_index[-1] == -1:
@@ -311,10 +311,10 @@ def detailed_answer_question(model, quest,spacy_doc,nlp, svo_df, question_embedd
                 answer_facts.append(f'{n}. {answer}')
                 n +=1 
         return answer_facts, question_lemma, question_pos, answer_index,danswers_df
-    print('Query detailed answer-- Returning unique_statements')
+    # print('Query detailed answer-- Returning unique_statements')
     answer_facts = []
     answer_index = []
-    print(f'query - detailed answer - len of svo_df: {len(svo_df)}')
+    # print(f'query - detailed answer - len of svo_df: {len(svo_df)}')
     for statement in unique_statements:
         entity, cue, fact = statement
         answer_index.append(get_detailed_answer_index(str(entity)+' '+str(cue)+' '+str(fact), svo_df))

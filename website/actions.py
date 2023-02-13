@@ -14,6 +14,8 @@ from nltk.corpus import stopwords
 from spacy.tokens import Doc
 import torch
 import numpy as np
+from flask import jsonify
+from io import StringIO
 
 '''
 Code to save nlp vocab to tmp folder.
@@ -27,7 +29,7 @@ def save_nlp_to_disk(text_doc):
         text_doc.to_disk(text_nlp)
         text_vocab = tmpdir+'/spacy_vocab.voc'
         text_doc.vocab.to_disk(text_vocab)
-        print(f'tmpdir : {tmpdir}')
+        # print(f'tmpdir : {tmpdir}')
         return tmpdir
     except Exception as e:
         print(f'Unable to save NLP to disk {e}')
@@ -47,12 +49,12 @@ qa_mpnet_base_model = models.load_qa_mpnet_base_model()
 
 @actions.route('/',methods=['GET'])
 def home():
-    print(f'calling home - {request.method}')
+    # print(f'calling home - {request.method}')
     return render_template('home.html')
 
 @actions.route('/scrape', methods=['POST'])
 def scrape():
-    print(f'calling scrape {request.method}')
+    # print(f'calling scrape {request.method}')
     ## Cleaning tmp folder
     cleantmp.main()
     if request.method == 'POST':
@@ -64,7 +66,7 @@ def scrape():
             try:
                 text = scrapper.scrape_text(web_url)
                 text_df,text = cleaner.clean_data(text)
-                print(f'length of text scraped:{len(text)}')
+                # print(f'length of text scraped:{len(text)}')
                 if len(text) > 1:
                     return render_template('home.html', weburl = web_url, cleantext = text, display_svo = False)
                 else:
@@ -78,17 +80,17 @@ def scrape():
 
 @actions.route('/extract', methods=['POST'])
 def extract():
-    print(f'Extracting triplets {request.method}')
+    # print(f'Extracting triplets {request.method}')
     if request.method == 'GET':
         return render_template('home.html')
     if request.method == 'POST':
         web_url = request.form.get('weburl')
         text = request.form.get('cleantext')
-        print(f'length of clean text: {len(text)}')
-        print(f'no of sentences before clean--> {len(text.splitlines())}')
+        # print(f'length of clean text: {len(text)}')
+        # print(f'no of sentences before clean--> {len(text.splitlines())}')
         if len(text) > 0:
             text_df,text = cleaner.clean_data(text)
-        print(f'no of sentences after clean--> {len(text.splitlines())}')
+        # print(f'no of sentences after clean--> {len(text.splitlines())}')
         
         # if len(text_df) > 0:
         #     text_df.to_csv('text_df.csv', index = True)
@@ -98,9 +100,9 @@ def extract():
         n_word_tokens = len(word_tokenize(text))
 
         svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
-        print(f' Len of svo_df --> {len(svo_df)}')
+        # print(f' Len of svo_df --> {len(svo_df)}')
         svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
-        print(f'n_word_tokens : {n_word_tokens}')
+        # print(f'n_word_tokens : {n_word_tokens}')
         if len(svo_df) > 0:
             svo_df.to_csv('svo_df.csv', index = True)
 
@@ -110,7 +112,7 @@ def extract():
         triplets_found = False
         headings = svo_df.columns[0:3]
         data_tuple = []
-        print(f'svo_df length - extract : {len(svo_df)}')
+        # print(f'svo_df length - extract : {len(svo_df)}')
         if len(svo_df) >= 1:
             triplets_found = True
             for index, row in svo_df.iterrows():
@@ -135,13 +137,14 @@ def extract():
             session['image_base64'] = figdata_png
             session['svo_df'] = svo_df.to_json(default_handler=str)
 
-            print(f'Saving sentence_embeddings to numpy')
+            # print(f'Saving sentence_embeddings to numpy')
             if isinstance(sentence_embeddings, torch.Tensor):
-                print('sentence_embeddings size -----> ', sentence_embeddings.size())
+                # print('sentence_embeddings size -----> ', sentence_embeddings.size())
                 sentence_embeddings_numpy = sentence_embeddings.cpu().numpy()
                 session['sentence_embeddings'] = sentence_embeddings_numpy
+                
             # result_optimization.print_temp_dir()
-
+            print(f'Coding -----------********************')
             return render_template('home.html', weburl = web_url,
                                     image_base64 = figdata_png,
                                     matrix = str(nx.to_numpy_array(G)).replace('.',',').replace('\n',','),
@@ -176,7 +179,7 @@ def extract():
 
 @actions.route('/queryQuestion', methods=['POST'])
 def queryQuestion():
-    print(f'calling queryQuestion {request.method}')
+    # print(f'calling queryQuestion {request.method}')
     if request.method == 'POST':
         web_url = request.form.get('weburl')
         figdata_png = session.get('image_base64')
@@ -193,7 +196,7 @@ def queryQuestion():
         # session['networkxGraph_labels'] = edge_labels
 
 
-        print(create_temp_dir.get_temp_dir())
+        # print(create_temp_dir.get_temp_dir())
         ## Loading NLP
         try:
             if request.form.get('tmpdir') is None or request.form.get('tmpdir') == "None" \
@@ -252,9 +255,9 @@ def queryQuestion():
         short_answers = ''
         detailed_answers = ''
         question_svo_df, check_cause, question_embedding = stanza_svo_extractor.triplet_extraction('',nlp,qa_mpnet_base_model, question, output = ['result'])
-        print('question_svo_df --> ', question_svo_df)
+        # print('question_svo_df --> ', question_svo_df)
         danswer, question_lemma_, question_pos_, danswer_index,danswers_df = query.detailed_answer_question(qa_mpnet_base_model,question,text_doc, nlp, svo_df, question_embedding, sentence_embeddings, question_svo_df, check_cause)
-        print(f'danswer_index --> {danswer_index}')
+        # print(f'danswer_index --> {danswer_index}')
         # print(f'danswers_df --> {type(danswers_df)}')
         detailed_answers_found = False
         detailed_answer_length = 0
@@ -300,3 +303,121 @@ def queryQuestion():
                                         detailed_answer_length = detailed_answer_length,
                                         display_svo = True)
 
+#############################################################################################
+@actions.route('/api/v1/scrape', methods=['POST'])
+def api_v1_scrape():
+    print(f'calling scrape {request.method}')
+    ## Cleaning tmp folder
+
+    body=request.get_json(silent=True)
+    web_url = body['url']
+    print(web_url)
+
+    try:
+        text = scrapper.scrape_text(web_url)
+        text_df,text = cleaner.clean_data(text)
+        return jsonify({'msg':"OK",'cleanText': text})
+    except Exception as e:
+        print(f'ERROR scrap {e}')
+
+    return jsonify({'msg': 'URL entered cannot be scraped!'})
+
+@actions.route('/api/v1/extract', methods=['POST'])
+def api_v1_extract():
+    print(f'Extracting triplets {request.method}')
+
+    body=request.get_json(silent=True)
+
+    text = body['cleanText']
+    # print(f'length of clean text: {len(text)}')
+    # print(f'no of sentences before clean--> {len(text.splitlines())}')
+
+    text_df,text = cleaner.clean_data(text)
+    # print(f'no of sentences after clean--> {len(text.splitlines())}')
+
+    text = text.lower()
+    text_doc = nlp(text)
+    n_word_tokens = len(word_tokenize(text))    
+    svo_df, text_doc, sentence_embeddings = svo_extractor.svo(text_doc,text,nlp,qa_mpnet_base_model)
+    # print(f' Len of svo_df --> {len(svo_df)}')
+    svo_df, text_doc, sentence_embeddings = svo_extractor.extract_embeddings(qa_mpnet_base_model, text_doc, nlp, svo_df, text)
+    # print(f'n_word_tokens : {n_word_tokens}')
+    np.set_printoptions(threshold=np.inf)
+    # print(f'Saving sentence_embeddings to numpy')
+    if isinstance(sentence_embeddings, torch.Tensor):
+        # print('sentence_embeddings size -----> ', sentence_embeddings.size())
+        sentence_embeddings_numpy = sentence_embeddings.cpu().numpy()
+        sentence_embeddings_str = np.array2string(sentence_embeddings_numpy)
+
+    
+    # print(sentence_embeddings_numpy)
+
+    if len(svo_df) > 0:
+        grf = svo_df.to_csv()
+
+        # print(f'svo_df length - extract : {len(svo_df)}')
+        if len(svo_df) >= 1:
+            
+            return jsonify({'msg':'OK','kgGraph':str(grf), 'embeddings':str(sentence_embeddings_str)})
+
+
+    return jsonify({'msg':'No data extracted'})
+
+@actions.route('/api/v1/queryQuestion', methods=['POST'])
+def api_v1_queryQuestion():
+    print(f'calling queryQuestion {request.method}')
+    if request.method == 'POST':
+        body=request.get_json(silent=True)
+        question = body['question']
+        embeddings = body['embeddings']
+        svo_df = StringIO(body['kgGraph'].replace('\\n','\n'))
+        svo_df = pd.read_csv(svo_df, sep = ",")
+        svo_df = svo_df.iloc[:,1:]
+        embeddings = str(embeddings).replace('[[','').replace('[','').replace(']','')
+        sentence_embeddings = torch.from_numpy(np.fromstring(embeddings, dtype = np.float32, sep='  ').reshape(len(svo_df),768))
+        G, pos, edge_labels = kg_generator.plot_kg(svo_df)
+        print(f'Question : {question}')        
+        
+        short_answers = ''
+        detailed_answers = ''
+        question_svo_df, check_cause, question_embedding = stanza_svo_extractor.triplet_extraction('',nlp,qa_mpnet_base_model, question, output = ['result'])
+        # print('question_svo_df --> ', question_svo_df)
+
+        #return jsonify({'msg':'OK','shortAnswer':'Test short answer','sentence_embedding':str(sentence_embeddings)})
+
+        danswer, question_lemma_, question_pos_, danswer_index,danswers_df = query.detailed_answer_question(qa_mpnet_base_model,question,None, nlp, svo_df, question_embedding, sentence_embeddings, question_svo_df, check_cause)
+        # print(f'danswer_index --> {danswer_index}')
+        # print(f'danswers_df --> {type(danswers_df)}')
+
+        # return jsonify({'msg':'OK','shortAnswer':'Test short answer','sentence_embedding':str(sentence_embeddings)})
+
+        detailed_answers_found = False
+        detailed_answer_length = 0
+        if len(danswer) > 0:
+            detailed_answers_found = True
+            for ans in danswer:
+                # print(f'detailed answers : {ans}')
+                if ans.strip()[-1] == '?':
+                    pass
+                else:
+                    detailed_answers +=  ans + '\n'
+                    detailed_answer_length += 2
+        answer, question_lemma_, question_pos_ = query.short_answer_question(question,None, nlp, svo_df,danswer_index,danswers_df, G, pos, edge_labels, check_cause)
+        short_answers_found = False
+        short_answer_length = 0
+        if len(answer) > 0:
+            short_answers_found = True
+            for ans in answer:
+                short_answers = '\n'.join(answer)
+                short_answer_length += 1
+        no_answer_found = False
+        qanswer = ''
+        if not short_answers_found:
+            if not detailed_answers_found:
+                no_answer_found = True
+                qanswer = 'No answer found.'
+
+
+        
+        # return jsonify({'msg':'No data extracted'})
+        return jsonify({'msg':'OK','shortAnswer':str(short_answers),'detailedAnswer':str(detailed_answers)})
